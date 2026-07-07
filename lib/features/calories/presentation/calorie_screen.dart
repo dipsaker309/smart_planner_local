@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/local/models/food_log_model.dart';
 import '../../../shared/widgets/date_selector.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../application/calorie_controller.dart';
 import 'analytics_screen.dart';
 import 'widgets/food_entry_sheet.dart';
+import 'widgets/food_log_edit_sheet.dart';
 import 'widgets/food_log_tile.dart';
 
 class CalorieScreen extends ConsumerWidget {
@@ -51,6 +53,33 @@ class CalorieScreen extends ConsumerWidget {
                   unit: unit,
                   calories: calories,
                   logQuantity: logQuantity,
+                  note: note,
+                );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _openEditFoodLogSheet(
+    BuildContext context,
+    WidgetRef ref,
+    FoodLogModel log,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return FoodLogEditSheet(
+          log: log,
+          onSubmit: ({
+            required double quantity,
+            required String note,
+          }) {
+            return ref.read(calorieControllerProvider.notifier).editFoodLog(
+                  logId: log.id,
+                  quantity: quantity,
                   note: note,
                 );
           },
@@ -250,6 +279,9 @@ class CalorieScreen extends ConsumerWidget {
 
                       return FoodLogTile(
                         log: log,
+                        onEdit: () {
+                          _openEditFoodLogSheet(context, ref, log);
+                        },
                         onDelete: () {
                           controller.deleteFoodLog(log.id);
                         },

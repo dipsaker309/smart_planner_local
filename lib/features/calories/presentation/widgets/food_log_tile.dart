@@ -7,10 +7,12 @@ class FoodLogTile extends StatelessWidget {
   const FoodLogTile({
     super.key,
     required this.log,
+    required this.onEdit,
     required this.onDelete,
   });
 
   final FoodLogModel log;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   String _formatQuantity(double value) {
@@ -37,10 +39,20 @@ class FoodLogTile extends StatelessWidget {
           '${_formatQuantity(log.quantity)} ${log.unit}'
           ' • ${AppDateUtils.formatTime(log.consumedAt)}',
         ),
-        trailing: IconButton(
-          onPressed: onDelete,
-          icon: const Icon(Icons.delete_outline_rounded),
-          tooltip: 'Delete food log',
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit food log',
+            ),
+            IconButton(
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline_rounded),
+              tooltip: 'Delete food log',
+            ),
+          ],
         ),
       ),
     );
