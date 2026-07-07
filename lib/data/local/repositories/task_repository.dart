@@ -135,7 +135,9 @@ class TaskRepository {
     return tasks.where((task) => task.progress < 100).toList();
   }
 
-  Future<int> rolloverUnfinishedTasksToDate(DateTime targetDate) async {
+  Future<List<TaskModel>> getRolloverCandidatesForDate(
+    DateTime targetDate,
+  ) async {
     final previousDate = AppDateUtils.previousDay(targetDate);
     final unfinishedTasks = await getUnfinishedTasksByDate(previousDate);
     final targetTasks = await getTasksByDate(targetDate);
@@ -145,10 +147,38 @@ class TaskRepository {
         .whereType<String>()
         .toSet();
 
+    final candidates = unfinishedTasks.where((task) {
+      return !existingRolloverSourceIds.contains(task.id);
+    }).toList();
+
+    candidates.sort((a, b) {
+      final priorityCompare = a.priorityRank.compareTo(b.priorityRank);
+
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+
+      return a.createdAt.compareTo(b.createdAt);
+    });
+
+    return candidates;
+  }
+
+  Future<int> rolloverSelectedTasksToDate({
+    required DateTime targetDate,
+    required List<String> sourceTaskIds,
+  }) async {
+    if (sourceTaskIds.isEmpty) {
+      return 0;
+    }
+
+    final sourceIdSet = sourceTaskIds.toSet();
+    final candidates = await getRolloverCandidatesForDate(targetDate);
+
     int createdCount = 0;
 
-    for (final task in unfinishedTasks) {
-      if (existingRolloverSourceIds.contains(task.id)) {
+    for (final task in candidates) {
+      if (!sourceIdSet.contains(task.id)) {
         continue;
       }
 
@@ -164,5 +194,14 @@ class TaskRepository {
     }
 
     return createdCount;
+  }
+
+  Future<int> rolloverUnfinishedTasksToDate(DateTime targetDate) async {
+    final candidates = await getRolloverCandidatesForDate(targetDate);
+
+    return rolloverSelectedTasksToDate(
+      targetDate: targetDate,
+      sourceTaskIds: candidates.map((task) => task.id).toList(),
+    );
   }
 }

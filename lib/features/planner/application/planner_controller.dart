@@ -118,22 +118,40 @@ class PlannerController extends Notifier<PlannerState> {
     await loadTasksForDate(state.selectedDate);
   }
 
-  Future<void> rolloverFromPreviousDay() async {
-    final createdCount = await _repository.rolloverUnfinishedTasksToDate(
-      state.selectedDate,
+  Future<List<TaskModel>> getRolloverCandidates() {
+    return _repository.getRolloverCandidatesForDate(state.selectedDate);
+  }
+
+  Future<void> rolloverSelectedTasks(List<String> sourceTaskIds) async {
+    if (sourceTaskIds.isEmpty) {
+      state = state.copyWith(message: 'Please select at least one task.');
+      return;
+    }
+
+    final createdCount = await _repository.rolloverSelectedTasksToDate(
+      targetDate: state.selectedDate,
+      sourceTaskIds: sourceTaskIds,
     );
 
     await loadTasksForDate(state.selectedDate);
 
     if (createdCount == 0) {
       state = state.copyWith(
-        message: 'No unfinished tasks found from yesterday.',
+        message: 'No new tasks were rolled over.',
       );
     } else {
       state = state.copyWith(
-        message: '$createdCount task(s) rolled over from yesterday.',
+        message: '$createdCount task(s) rolled over.',
       );
     }
+  }
+
+  Future<void> rolloverFromPreviousDay() async {
+    final candidates = await getRolloverCandidates();
+
+    await rolloverSelectedTasks(
+      candidates.map((task) => task.id).toList(),
+    );
   }
 
   void clearMessage() {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/date_selector.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../application/planner_controller.dart';
+import 'widgets/rollover_task_sheet.dart';
 import 'widgets/task_form_sheet.dart';
 import 'widgets/task_tile.dart';
 
@@ -36,6 +37,30 @@ class PlannerScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openRolloverSheet(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final controller = ref.read(plannerControllerProvider.notifier);
+    final candidates = await controller.getRolloverCandidates();
+
+    if (!context.mounted) {
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return RolloverTaskSheet(
+          candidates: candidates,
+          onSubmit: controller.rolloverSelectedTasks,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final plannerState = ref.watch(plannerControllerProvider);
@@ -60,9 +85,9 @@ class PlannerScreen extends ConsumerWidget {
         title: const Text('Daily Planner'),
         actions: [
           IconButton(
-            onPressed: controller.rolloverFromPreviousDay,
+            onPressed: () => _openRolloverSheet(context, ref),
             icon: const Icon(Icons.redo_rounded),
-            tooltip: 'Rollover unfinished tasks from yesterday',
+            tooltip: 'Choose tasks to roll over from yesterday',
           ),
         ],
       ),
