@@ -1,41 +1,55 @@
 class TaskModel {
   const TaskModel({
     required this.id,
+    required this.planDate,
     required this.title,
+    required this.description,
+    required this.progress,
+    required this.isDeleted,
     required this.createdAt,
     required this.updatedAt,
-    this.notes = '',
-    this.dueDate,
-    this.progress = 0,
-    this.isCompleted = false,
+    this.rolloverSourceTaskId,
   });
 
   final String id;
+  final String planDate; // yyyy-MM-dd
   final String title;
-  final String notes;
-  final DateTime? dueDate;
-  final double progress;
-  final bool isCompleted;
+  final String description;
+  final int progress; // 0 to 100
+  final String? rolloverSourceTaskId;
+  final bool isDeleted;
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  bool get isDone => progress >= 100;
+  bool get isPending => progress <= 0;
+  bool get isPartiallyDone => progress > 0 && progress < 100;
+
+  String get statusLabel {
+    if (isDone) return 'Done';
+    if (isPending) return 'Pending';
+    return 'Partial';
+  }
+
   TaskModel copyWith({
     String? id,
+    String? planDate,
     String? title,
-    String? notes,
-    DateTime? dueDate,
-    double? progress,
-    bool? isCompleted,
+    String? description,
+    int? progress,
+    String? rolloverSourceTaskId,
+    bool? isDeleted,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return TaskModel(
       id: id ?? this.id,
+      planDate: planDate ?? this.planDate,
       title: title ?? this.title,
-      notes: notes ?? this.notes,
-      dueDate: dueDate ?? this.dueDate,
+      description: description ?? this.description,
       progress: progress ?? this.progress,
-      isCompleted: isCompleted ?? this.isCompleted,
+      rolloverSourceTaskId: rolloverSourceTaskId ?? this.rolloverSourceTaskId,
+      isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -44,34 +58,30 @@ class TaskModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'planDate': planDate,
       'title': title,
-      'notes': notes,
-      'dueDate': dueDate?.toIso8601String(),
+      'description': description,
       'progress': progress,
-      'isCompleted': isCompleted,
+      'rolloverSourceTaskId': rolloverSourceTaskId,
+      'isDeleted': isDeleted,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
-  factory TaskModel.fromMap(Map<String, dynamic> map) {
+  factory TaskModel.fromMap(Map<dynamic, dynamic> map) {
     return TaskModel(
       id: map['id'] as String,
+      planDate: map['planDate'] as String,
       title: map['title'] as String,
-      notes: map['notes'] as String? ?? '',
-      dueDate: _dateFromMap(map['dueDate']),
-      progress: (map['progress'] as num?)?.toDouble() ?? 0,
-      isCompleted: map['isCompleted'] as bool? ?? false,
-      createdAt: _dateFromMap(map['createdAt']) ?? DateTime.now(),
-      updatedAt: _dateFromMap(map['updatedAt']) ?? DateTime.now(),
+      description: (map['description'] as String?) ?? '',
+      progress: (map['progress'] as num?)?.toInt() ?? 0,
+      rolloverSourceTaskId: map['rolloverSourceTaskId'] as String?,
+      isDeleted: (map['isDeleted'] as bool?) ?? false,
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt: DateTime.tryParse(map['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
-  }
-
-  static DateTime? _dateFromMap(Object? value) {
-    if (value == null) {
-      return null;
-    }
-
-    return DateTime.tryParse(value as String);
   }
 }
