@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../data/local/models/task_model.dart';
+import '../../../../shared/widgets/app_card.dart';
 import 'progress_slider.dart';
 
 class TaskTile extends StatelessWidget {
@@ -18,111 +20,176 @@ class TaskTile extends StatelessWidget {
   final VoidCallback onDelete;
 
   Color _statusColor(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (task.isDone) {
-      return Colors.green;
+      return colorScheme.primary;
     }
 
     if (task.isPartiallyDone) {
-      return Colors.orange;
+      return colorScheme.tertiary;
     }
 
-    return Theme.of(context).colorScheme.outline;
+    return colorScheme.outline;
   }
 
-  Color _priorityColor() {
+  Color _priorityColor(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     switch (task.priority) {
       case 'high':
-        return Colors.red;
+        return colorScheme.error;
       case 'low':
-        return Colors.blueGrey;
+        return colorScheme.outline;
       case 'medium':
       default:
-        return Colors.amber.shade800;
+        return colorScheme.tertiary;
     }
+  }
+
+  String _progressText() {
+    if (task.isDone) {
+      return 'Completed';
+    }
+
+    if (task.isPending) {
+      return 'Not started';
+    }
+
+    return '${task.progress}% done';
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _statusColor(context);
-    final priorityColor = _priorityColor();
+    final priorityColor = _priorityColor(context);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.gap12),
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 40,
+                child: Icon(
                   task.isDone
                       ? Icons.check_circle_rounded
                       : Icons.radio_button_unchecked_rounded,
                   color: statusColor,
+                  size: 28,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    task.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          decoration:
-                              task.isDone ? TextDecoration.lineThrough : null,
+              ),
+              const SizedBox(width: AppSpacing.gap8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            decoration:
+                                task.isDone ? TextDecoration.lineThrough : null,
+                          ),
+                    ),
+                    const SizedBox(height: AppSpacing.gap4),
+                    Row(
+                      children: [
+                        Text(
+                          _progressText(),
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                         ),
-                  ),
+                        const SizedBox(width: AppSpacing.gap8),
+                        Icon(
+                          Icons.circle,
+                          size: 8,
+                          color: priorityColor,
+                        ),
+                        const SizedBox(width: AppSpacing.gap4),
+                        Text(
+                          '${task.priorityLabel} priority',
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                        ),
+                        if (task.rolloverSourceTaskId != null) ...[
+                          const SizedBox(width: AppSpacing.gap8),
+                          Icon(
+                            Icons.history_rounded,
+                            size: 16,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
-                IconButton(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit task',
-                ),
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  tooltip: 'Delete task',
-                ),
-              ],
-            ),
-            if (task.description.trim().isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 36),
-                child: Text(
-                  task.description,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_horiz_rounded),
+                tooltip: 'Task options',
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    onEdit();
+                  }
+
+                  if (value == 'delete') {
+                    onDelete();
+                  }
+                },
+                itemBuilder: (context) {
+                  return const [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded),
+                          SizedBox(width: 8),
+                          Text('Delete'),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
               ),
             ],
-            const SizedBox(height: 8),
+          ),
+          if (task.description.trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.gap12),
             Padding(
-              padding: const EdgeInsets.only(left: 36),
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  Chip(
-                    label: Text(task.statusLabel),
-                    visualDensity: VisualDensity.compact,
-                    side: BorderSide(color: statusColor),
-                  ),
-                  Chip(
-                    label: Text('${task.priorityLabel} priority'),
-                    visualDensity: VisualDensity.compact,
-                    side: BorderSide(color: priorityColor),
-                    avatar: Icon(
-                      Icons.flag_rounded,
-                      size: 18,
-                      color: priorityColor,
+              padding: const EdgeInsets.only(left: 48),
+              child: Text(
+                task.description,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                ],
               ),
             ),
-            ProgressSlider(
-              progress: task.progress,
-              onChanged: onProgressChanged,
-            ),
           ],
-        ),
+          const SizedBox(height: AppSpacing.gap12),
+          ProgressSlider(
+            progress: task.progress,
+            onChanged: onProgressChanged,
+          ),
+        ],
       ),
     );
   }

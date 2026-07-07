@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../data/local/models/task_model.dart';
+import '../../../../shared/widgets/app_card.dart';
 
 class RolloverTaskSheet extends StatefulWidget {
   const RolloverTaskSheet({
@@ -70,47 +72,90 @@ class _RolloverTaskSheetState extends State<RolloverTaskSheet> {
     }
   }
 
-  Color _priorityColor(TaskModel task) {
+  Color _priorityColor(BuildContext context, TaskModel task) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     switch (task.priority) {
       case 'high':
-        return Colors.red;
+        return colorScheme.error;
       case 'low':
-        return Colors.blueGrey;
+        return colorScheme.outline;
       case 'medium':
       default:
-        return Colors.amber.shade800;
+        return colorScheme.tertiary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomPadding),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.gap20,
+            AppSpacing.gap12,
+            AppSpacing.gap20,
+            AppSpacing.gap20,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Rollover Tasks',
-                style: Theme.of(context).textTheme.titleLarge,
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: colorScheme.primaryContainer,
+                    foregroundColor: colorScheme.onPrimaryContainer,
+                    child: const Icon(Icons.history_rounded),
+                  ),
+                  const SizedBox(width: AppSpacing.gap12),
+                  Expanded(
+                    child: Text(
+                      'Rollover Tasks',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.gap8),
               Text(
                 'Select unfinished tasks from yesterday to copy into this date.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.gap16),
               if (widget.candidates.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 28),
-                  child: Text(
-                    'No unfinished tasks found from yesterday, or they were already rolled over.',
-                    textAlign: TextAlign.center,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.gap24,
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.inbox_rounded,
+                        size: 56,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: AppSpacing.gap12),
+                      Text(
+                        'No tasks to roll over',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.gap4),
+                      Text(
+                        'Yesterday has no unfinished tasks, or they were already rolled over.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
                   ),
                 )
               else ...[
@@ -129,60 +174,98 @@ class _RolloverTaskSheetState extends State<RolloverTaskSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.gap8),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 360),
+                  constraints: const BoxConstraints(maxHeight: 380),
                   child: ListView.builder(
                     shrinkWrap: true,
                     itemCount: widget.candidates.length,
                     itemBuilder: (context, index) {
                       final task = widget.candidates[index];
                       final selected = _selectedTaskIds.contains(task.id);
-                      final priorityColor = _priorityColor(task);
+                      final priorityColor = _priorityColor(context, task);
 
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: CheckboxListTile(
-                          value: selected,
-                          onChanged: (value) {
-                            _toggleTask(task.id, value ?? false);
-                          },
-                          title: Text(task.title),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (task.description.trim().isNotEmpty)
-                                Text(task.description),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                spacing: 8,
+                      return AppCard(
+                        margin: const EdgeInsets.only(
+                          bottom: AppSpacing.gap8,
+                        ),
+                        padding: const EdgeInsets.all(AppSpacing.gap12),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: selected,
+                              onChanged: (value) {
+                                _toggleTask(task.id, value ?? false);
+                              },
+                            ),
+                            const SizedBox(width: AppSpacing.gap8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Chip(
-                                    visualDensity: VisualDensity.compact,
-                                    label: Text('${task.progress}% done'),
+                                  Text(
+                                    task.title,
+                                    style:
+                                        Theme.of(context).textTheme.titleSmall,
                                   ),
-                                  Chip(
-                                    visualDensity: VisualDensity.compact,
-                                    avatar: Icon(
-                                      Icons.flag_rounded,
-                                      size: 16,
-                                      color: priorityColor,
+                                  if (task.description.trim().isNotEmpty) ...[
+                                    const SizedBox(height: AppSpacing.gap4),
+                                    Text(
+                                      task.description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color:
+                                                colorScheme.onSurfaceVariant,
+                                          ),
                                     ),
-                                    side: BorderSide(color: priorityColor),
-                                    label: Text(task.priorityLabel),
+                                  ],
+                                  const SizedBox(height: AppSpacing.gap8),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${task.progress}% done',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.gap8),
+                                      Icon(
+                                        Icons.circle,
+                                        size: 8,
+                                        color: priorityColor,
+                                      ),
+                                      const SizedBox(width: AppSpacing.gap4),
+                                      Text(
+                                        task.priorityLabel,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                          controlAffinity: ListTileControlAffinity.leading,
+                            ),
+                          ],
                         ),
                       );
                     },
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.gap16),
               if (widget.candidates.isNotEmpty)
                 SizedBox(
                   width: double.infinity,

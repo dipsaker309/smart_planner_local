@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../data/local/models/task_model.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../data/local/models/task_model.dart';
 import '../../../shared/widgets/date_selector.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../application/planner_controller.dart';
@@ -116,29 +117,34 @@ class PlannerScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Planner'),
+        title: const Text('Planner'),
         actions: [
           IconButton(
             onPressed: () => _openRolloverSheet(context, ref),
-            icon: const Icon(Icons.redo_rounded),
+            icon: const Icon(Icons.history_rounded),
             tooltip: 'Choose tasks to roll over from yesterday',
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddTaskSheet(context, ref),
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(Icons.add_task_rounded),
         label: const Text('Task'),
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.gap12,
+          AppSpacing.screenPadding,
+          0,
+        ),
         child: Column(
           children: [
             DateSelector(
               selectedDate: plannerState.selectedDate,
               onDateChanged: controller.loadTasksForDate,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.gap16),
             Expanded(
               child: Builder(
                 builder: (context) {
@@ -149,13 +155,19 @@ class PlannerScreen extends ConsumerWidget {
                   }
 
                   if (plannerState.tasks.isEmpty) {
-                    return const EmptyState(
-                      icon: Icons.checklist_rounded,
-                      message: 'No tasks for this date.\nTap + Task to add one.',
+                    return EmptyState(
+                      icon: Icons.inbox_rounded,
+                      title: 'Nothing planned yet',
+                      subtitle: 'Add your first task to start your day.',
+                      actionLabel: '+ Add Task',
+                      onAction: () => _openAddTaskSheet(context, ref),
                     );
                   }
 
                   return ListView.builder(
+                    padding: const EdgeInsets.only(
+                      bottom: AppSpacing.bottomScrollPadding,
+                    ),
                     itemCount: plannerState.tasks.length,
                     itemBuilder: (context, index) {
                       final task = plannerState.tasks[index];

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+
 class TaskFormSheet extends StatefulWidget {
   const TaskFormSheet({
     super.key,
@@ -85,15 +87,36 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomPadding),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gap20,
+          AppSpacing.gap16,
+          AppSpacing.gap20,
+          AppSpacing.gap24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              widget.sheetTitle,
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              children: [
+                CircleAvatar(
+                  child: Icon(
+                    widget.sheetTitle.toLowerCase().contains('edit')
+                        ? Icons.edit_rounded
+                        : Icons.add_task_rounded,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.gap12),
+                Expanded(
+                  child: Text(
+                    widget.sheetTitle,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.gap20),
             TextField(
               controller: _titleController,
               autofocus: true,
@@ -103,7 +126,7 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.gap12),
             TextField(
               controller: _descriptionController,
               maxLines: 3,
@@ -112,7 +135,7 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.gap12),
             DropdownButtonFormField<String>(
               initialValue: _priority,
               decoration: const InputDecoration(
@@ -122,15 +145,15 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
               items: const [
                 DropdownMenuItem(
                   value: 'high',
-                  child: Text('High'),
+                  child: Text('High priority'),
                 ),
                 DropdownMenuItem(
                   value: 'medium',
-                  child: Text('Medium'),
+                  child: Text('Medium priority'),
                 ),
                 DropdownMenuItem(
                   value: 'low',
-                  child: Text('Low'),
+                  child: Text('Low priority'),
                 ),
               ],
               onChanged: (value) {
@@ -141,11 +164,14 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
                 }
               },
             ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: _isSaving ? null : _saveTask,
-              icon: const Icon(Icons.save_rounded),
-              label: Text(_isSaving ? 'Saving...' : widget.submitLabel),
+            const SizedBox(height: AppSpacing.gap20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _isSaving ? null : _saveTask,
+                icon: const Icon(Icons.save_rounded),
+                label: Text(_isSaving ? 'Saving...' : widget.submitLabel),
+              ),
             ),
           ],
         ),
