@@ -1,32 +1,44 @@
-class ParsedFoodEntry {
-  const ParsedFoodEntry({
-    required this.name,
-    required this.calories,
+class ParsedFoodInput {
+  const ParsedFoodInput({
+    required this.quantity,
+    required this.unit,
+    required this.foodName,
   });
 
-  final String name;
-  final int calories;
+  final double quantity;
+  final String unit;
+  final String foodName;
 }
 
 class FoodParser {
   const FoodParser._();
 
-  static ParsedFoodEntry parse(String input) {
-    final trimmedInput = input.trim();
-    final calorieMatch = RegExp(
-      r'(\d+)\s*(cal|cals|calorie|calories|kcal)?',
-      caseSensitive: false,
-    ).firstMatch(trimmedInput);
+  static ParsedFoodInput? parse(String input) {
+    final cleaned = input.trim().toLowerCase();
 
-    final calories = int.tryParse(calorieMatch?.group(1) ?? '') ?? 0;
-    final name = trimmedInput
-        .replaceFirst(RegExp(r'\d+\s*(cal|cals|calorie|calories|kcal)?',
-            caseSensitive: false), '')
-        .trim();
+    if (cleaned.isEmpty) {
+      return null;
+    }
 
-    return ParsedFoodEntry(
-      name: name.isEmpty ? trimmedInput : name,
-      calories: calories,
+    final regex = RegExp(r'^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s+(.+)$');
+    final match = regex.firstMatch(cleaned);
+
+    if (match == null) {
+      return ParsedFoodInput(
+        quantity: 1,
+        unit: 'piece',
+        foodName: cleaned,
+      );
+    }
+
+    final quantity = double.tryParse(match.group(1) ?? '1') ?? 1;
+    final unit = match.group(2) ?? 'piece';
+    final foodName = match.group(3)?.trim() ?? cleaned;
+
+    return ParsedFoodInput(
+      quantity: quantity,
+      unit: unit,
+      foodName: foodName,
     );
   }
 }

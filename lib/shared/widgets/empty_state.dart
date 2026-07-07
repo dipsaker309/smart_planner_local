@@ -2,21 +2,16 @@ import 'package:flutter/material.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
-    required this.icon,
-    required this.title,
-    required this.message,
     super.key,
+    required this.message,
+    this.icon = Icons.inbox_outlined,
   });
 
-  final IconData icon;
-  final String title;
   final String message;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -24,19 +19,13 @@ class EmptyState extends StatelessWidget {
           Icon(
             icon,
             size: 48,
-            color: colorScheme.primary,
+            color: Theme.of(context).colorScheme.outline,
           ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             message,
-            style: textTheme.bodyMedium,
             textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
       ),

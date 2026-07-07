@@ -12,8 +12,9 @@ class SmartPlannerApp extends StatelessWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        colorSchemeSeed: Colors.teal,
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF7F8FA),
       ),
       home: const HomeScreen(),
     );

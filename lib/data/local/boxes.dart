@@ -1,15 +1,11 @@
-class Boxes {
-  const Boxes._();
+import '../../core/constants/app_constants.dart';
 
-  static const tasks = 'tasks';
-  static const foodLogs = 'food_logs';
-  static const foodItems = 'food_items';
-  static const rolloverHistory = 'rollover_history';
+class HiveBoxes {
+  const HiveBoxes._();
 
-  static const all = [
-    tasks,
-    foodLogs,
-    foodItems,
-    rolloverHistory,
-  ];
+  static const String tasks = AppConstants.tasksBox;
+  static const String foodLogs = AppConstants.foodLogsBox;
+  static const String foodDictionary = AppConstants.foodDictionaryBox;
+  static const String rolloverHistory = AppConstants.rolloverHistoryBox;
+  static const String settings = AppConstants.settingsBox;
 }

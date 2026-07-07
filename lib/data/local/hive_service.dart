@@ -9,20 +9,17 @@ class HiveService {
     await Hive.initFlutter();
 
     await Future.wait([
-      Hive.openBox<Map>(Boxes.tasks),
-      Hive.openBox<Map>(Boxes.foodLogs),
-      Hive.openBox<Map>(Boxes.foodItems),
-      Hive.openBox<Map>(Boxes.rolloverHistory),
+      Hive.openBox<Map>(HiveBoxes.tasks),
+      Hive.openBox<Map>(HiveBoxes.foodLogs),
+      Hive.openBox<Map>(HiveBoxes.foodDictionary),
+      Hive.openBox<Map>(HiveBoxes.rolloverHistory),
+      Hive.openBox<Map>(HiveBoxes.settings),
     ]);
   }
 
-  static Box<Map> get tasksBox => Hive.box<Map>(Boxes.tasks);
-  static Box<Map> get foodLogsBox => Hive.box<Map>(Boxes.foodLogs);
-  static Box<Map> get foodItemsBox => Hive.box<Map>(Boxes.foodItems);
-  static Box<Map> get rolloverHistoryBox =>
-      Hive.box<Map>(Boxes.rolloverHistory);
-
-  static Future<void> close() {
-    return Hive.close();
-  }
+  static Box<Map> get tasksBox => Hive.box<Map>(HiveBoxes.tasks);
+  static Box<Map> get foodLogsBox => Hive.box<Map>(HiveBoxes.foodLogs);
+  static Box<Map> get foodDictionaryBox => Hive.box<Map>(HiveBoxes.foodDictionary);
+  static Box<Map> get rolloverHistoryBox => Hive.box<Map>(HiveBoxes.rolloverHistory);
+  static Box<Map> get settingsBox => Hive.box<Map>(HiveBoxes.settings);
 }

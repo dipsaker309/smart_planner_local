@@ -9,5 +9,9 @@ Future<void> main() async {
 
   await HiveService.init();
 
-  runApp(const ProviderScope(child: SmartPlannerApp()));
+  runApp(
+    const ProviderScope(
+      child: SmartPlannerApp(),
+    ),
+  );
 }
