@@ -22,7 +22,15 @@ class TaskRepository {
         .where((task) => task.planDate == key && !task.isDeleted)
         .toList();
 
-    tasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    tasks.sort((a, b) {
+      final priorityCompare = a.priorityRank.compareTo(b.priorityRank);
+
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+
+      return a.createdAt.compareTo(b.createdAt);
+    });
 
     return tasks;
   }
@@ -41,6 +49,7 @@ class TaskRepository {
     required DateTime date,
     required String title,
     String description = '',
+    String priority = 'medium',
     String? rolloverSourceTaskId,
   }) async {
     final now = DateTime.now();
@@ -51,6 +60,7 @@ class TaskRepository {
       title: title.trim(),
       description: description.trim(),
       progress: 0,
+      priority: priority,
       rolloverSourceTaskId: rolloverSourceTaskId,
       isDeleted: false,
       createdAt: now,
@@ -86,6 +96,7 @@ class TaskRepository {
     required String id,
     required String title,
     required String description,
+    required String priority,
   }) async {
     final task = await getTaskById(id);
 
@@ -96,6 +107,7 @@ class TaskRepository {
     final updatedTask = task.copyWith(
       title: title.trim(),
       description: description.trim(),
+      priority: priority,
       updatedAt: DateTime.now(),
     );
 
@@ -144,6 +156,7 @@ class TaskRepository {
         date: targetDate,
         title: task.title,
         description: task.description,
+        priority: task.priority,
         rolloverSourceTaskId: task.id,
       );
 
