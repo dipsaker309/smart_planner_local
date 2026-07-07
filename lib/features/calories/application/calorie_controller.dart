@@ -162,6 +162,27 @@ class CalorieController extends Notifier<CalorieState> {
     loadForDate(state.selectedDate);
   }
 
+  Future<void> editFoodLog({
+    required String logId,
+    required double quantity,
+    required String note,
+  }) async {
+    if (quantity <= 0) {
+      state = state.copyWith(message: 'Please enter a valid quantity.');
+      return;
+    }
+
+    await _foodRepository.updateFoodLog(
+      id: logId,
+      quantity: quantity,
+      note: note,
+    );
+
+    loadForDate(state.selectedDate);
+
+    state = state.copyWith(message: 'Food log updated.');
+  }
+
   Future<void> addCustomFoodAndLog({
     required String name,
     required double baseQuantity,

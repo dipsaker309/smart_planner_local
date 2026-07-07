@@ -8,11 +8,13 @@ class TaskTile extends StatelessWidget {
     super.key,
     required this.task,
     required this.onProgressChanged,
+    required this.onEdit,
     required this.onDelete,
   });
 
   final TaskModel task;
   final ValueChanged<int> onProgressChanged;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   Color _statusColor(BuildContext context) {
@@ -68,6 +70,11 @@ class TaskTile extends StatelessWidget {
                               task.isDone ? TextDecoration.lineThrough : null,
                         ),
                   ),
+                ),
+                IconButton(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Edit task',
                 ),
                 IconButton(
                   onPressed: onDelete,

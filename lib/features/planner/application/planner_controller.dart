@@ -101,6 +101,29 @@ class PlannerController extends Notifier<PlannerState> {
     await loadTasksForDate(state.selectedDate);
   }
 
+  Future<void> editTask({
+    required String taskId,
+    required String title,
+    required String description,
+    required String priority,
+  }) async {
+    if (title.trim().isEmpty) {
+      state = state.copyWith(message: 'Task title cannot be empty.');
+      return;
+    }
+
+    await _repository.updateTaskText(
+      id: taskId,
+      title: title,
+      description: description,
+      priority: priority,
+    );
+
+    await loadTasksForDate(state.selectedDate);
+
+    state = state.copyWith(message: 'Task updated.');
+  }
+
   Future<void> updateProgress({
     required String taskId,
     required int progress,

@@ -4,6 +4,11 @@ class TaskFormSheet extends StatefulWidget {
   const TaskFormSheet({
     super.key,
     required this.onSubmit,
+    this.initialTitle = '',
+    this.initialDescription = '',
+    this.initialPriority = 'medium',
+    this.sheetTitle = 'Add Task',
+    this.submitLabel = 'Add Task',
   });
 
   final Future<void> Function({
@@ -12,16 +17,33 @@ class TaskFormSheet extends StatefulWidget {
     required String priority,
   }) onSubmit;
 
+  final String initialTitle;
+  final String initialDescription;
+  final String initialPriority;
+  final String sheetTitle;
+  final String submitLabel;
+
   @override
   State<TaskFormSheet> createState() => _TaskFormSheetState();
 }
 
 class _TaskFormSheetState extends State<TaskFormSheet> {
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
 
-  String _priority = 'medium';
+  late String _priority;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleController = TextEditingController(text: widget.initialTitle);
+    _descriptionController = TextEditingController(
+      text: widget.initialDescription,
+    );
+    _priority = widget.initialPriority;
+  }
 
   @override
   void dispose() {
@@ -68,7 +90,7 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Add Task',
+              widget.sheetTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -122,8 +144,8 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
             const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: _isSaving ? null : _saveTask,
-              icon: const Icon(Icons.add_rounded),
-              label: Text(_isSaving ? 'Saving...' : 'Add Task'),
+              icon: const Icon(Icons.save_rounded),
+              label: Text(_isSaving ? 'Saving...' : widget.submitLabel),
             ),
           ],
         ),

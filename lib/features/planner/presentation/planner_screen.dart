@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../data/local/models/task_model.dart';
 import '../../../shared/widgets/date_selector.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../application/planner_controller.dart';
@@ -27,6 +28,39 @@ class PlannerScreen extends ConsumerWidget {
             required String priority,
           }) {
             return ref.read(plannerControllerProvider.notifier).addTask(
+                  title: title,
+                  description: description,
+                  priority: priority,
+                );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _openEditTaskSheet(
+    BuildContext context,
+    WidgetRef ref,
+    TaskModel task,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return TaskFormSheet(
+          initialTitle: task.title,
+          initialDescription: task.description,
+          initialPriority: task.priority,
+          sheetTitle: 'Edit Task',
+          submitLabel: 'Update Task',
+          onSubmit: ({
+            required String title,
+            required String description,
+            required String priority,
+          }) {
+            return ref.read(plannerControllerProvider.notifier).editTask(
+                  taskId: task.id,
                   title: title,
                   description: description,
                   priority: priority,
@@ -133,6 +167,9 @@ class PlannerScreen extends ConsumerWidget {
                             taskId: task.id,
                             progress: progress,
                           );
+                        },
+                        onEdit: () {
+                          _openEditTaskSheet(context, ref, task);
                         },
                         onDelete: () {
                           controller.deleteTask(task.id);

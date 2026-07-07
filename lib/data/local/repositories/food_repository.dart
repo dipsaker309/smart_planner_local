@@ -286,6 +286,47 @@ class FoodRepository {
 
     return logs;
   }
+    Future<void> updateFoodLog({
+    required String id,
+    required double quantity,
+    required String note,
+  }) async {
+    final rawLog = HiveService.foodLogsBox.get(id);
+
+    if (rawLog == null) {
+      return;
+    }
+
+    final log = FoodLogModel.fromMap(rawLog);
+    final foodItem = getFoodItemById(log.foodItemId);
+
+    final calculatedCalories = foodItem == null
+        ? _calculateCaloriesFromExistingLog(log, quantity)
+        : foodItem.caloriesForQuantity(quantity);
+
+    final updatedLog = log.copyWith(
+      foodName: foodItem?.name ?? log.foodName,
+      quantity: quantity,
+      unit: foodItem?.unit ?? log.unit,
+      calculatedCalories: calculatedCalories,
+      note: note.trim(),
+      updatedAt: DateTime.now(),
+    );
+
+    await HiveService.foodLogsBox.put(id, updatedLog.toMap());
+  }
+
+  double _calculateCaloriesFromExistingLog(
+    FoodLogModel log,
+    double newQuantity,
+  ) {
+    if (log.quantity <= 0) {
+      return log.calculatedCalories;
+    }
+
+    final caloriesPerUnit = log.calculatedCalories / log.quantity;
+    return caloriesPerUnit * newQuantity;
+  }
 
   Future<void> deleteFoodLog(String id) async {
     final rawLog = HiveService.foodLogsBox.get(id);
