@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/date_selector.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../application/calorie_controller.dart';
+import 'analytics_screen.dart';
 import 'widgets/food_entry_sheet.dart';
 import 'widgets/food_log_tile.dart';
 
@@ -58,6 +59,14 @@ class CalorieScreen extends ConsumerWidget {
     );
   }
 
+  void _openAnalytics(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const AnalyticsScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final calorieState = ref.watch(calorieControllerProvider);
@@ -80,6 +89,13 @@ class CalorieScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calorie Tracker'),
+        actions: [
+          IconButton(
+            onPressed: () => _openAnalytics(context),
+            icon: const Icon(Icons.bar_chart_rounded),
+            tooltip: '30-day analytics',
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openFoodEntrySheet(context, ref),

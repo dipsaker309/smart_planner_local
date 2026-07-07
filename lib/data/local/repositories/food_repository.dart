@@ -312,4 +312,39 @@ class FoodRepository {
       (total, log) => total + log.calculatedCalories,
     );
   }
+
+  List<DailyCalorieTotal> getDailyCalorieTotalsForLastDays({
+    required DateTime endDate,
+    int days = 30,
+  }) {
+    final normalizedEndDate = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+    );
+
+    return List.generate(days, (index) {
+      final date = normalizedEndDate.subtract(
+        Duration(days: days - 1 - index),
+      );
+
+      return DailyCalorieTotal(
+        date: date,
+        dateKey: AppDateUtils.dateKey(date),
+        calories: getDailyTotalCalories(date),
+      );
+    });
+  }
+}
+
+class DailyCalorieTotal {
+  const DailyCalorieTotal({
+    required this.date,
+    required this.dateKey,
+    required this.calories,
+  });
+
+  final DateTime date;
+  final String dateKey;
+  final double calories;
 }
