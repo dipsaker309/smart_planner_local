@@ -47,8 +47,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onDestinationSelected: _changeTab,
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard_rounded),
+            icon: Icon(Icons.insights_outlined),
+            selectedIcon: Icon(Icons.insights_rounded),
             label: 'Dashboard',
           ),
           NavigationDestination(
@@ -57,8 +57,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Planner',
           ),
           NavigationDestination(
-            icon: Icon(Icons.local_fire_department_outlined),
-            selectedIcon: Icon(Icons.local_fire_department_rounded),
+            icon: Icon(Icons.restaurant_menu_outlined),
+            selectedIcon: Icon(Icons.restaurant_menu_rounded),
             label: 'Calories',
           ),
         ],
