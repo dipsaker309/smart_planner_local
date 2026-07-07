@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../data/local/models/food_item_model.dart';
+import '../../../../shared/widgets/app_card.dart';
 
 class FoodEntrySheet extends StatefulWidget {
   const FoodEntrySheet({
@@ -36,71 +38,92 @@ class _FoodEntrySheetState extends State<FoodEntrySheet> {
   final _quantityController = TextEditingController();
   final _noteController = TextEditingController();
 
-  final _baseQuantityController = TextEditingController();
-  final _caloriesController = TextEditingController();
+  final _newFoodNameController = TextEditingController();
+  final _newBaseQuantityController = TextEditingController(text: '100');
+  final _newCaloriesController = TextEditingController();
+  final _newLogQuantityController = TextEditingController(text: '100');
 
-  String _newFoodUnit = 'g';
   FoodItemModel? _selectedFood;
+  String _newFoodUnit = 'g';
   bool _isSaving = false;
 
-  final List<String> _units = const [
-    'g',
-    'ml',
-    'piece',
-    'slice',
-    'cup',
-    'plate',
-    'serving',
-    'tbsp',
-    'tsp',
-    'pack',
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     _quantityController.dispose();
     _noteController.dispose();
-    _baseQuantityController.dispose();
-    _caloriesController.dispose();
+    _newFoodNameController.dispose();
+    _newBaseQuantityController.dispose();
+    _newCaloriesController.dispose();
+    _newLogQuantityController.dispose();
     super.dispose();
   }
 
-  List<FoodItemModel> get _filteredFoods {
-    final query = _searchController.text.trim().toLowerCase();
+  String _normalize(String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
 
-    if (query.isEmpty) {
-      return widget.foodItems.take(12).toList();
+  String _formatQuantity(double value) {
+    if (value % 1 == 0) {
+      return value.toStringAsFixed(0);
     }
 
-    return widget.foodItems
-        .where((food) => food.normalizedName.contains(query))
-        .take(12)
-        .toList();
+    return value.toStringAsFixed(1);
   }
 
-  bool get _hasSearchText => _searchController.text.trim().isNotEmpty;
-
-  bool get _exactMatchExists {
-    final query = _searchController.text.trim().toLowerCase();
+  List<FoodItemModel> _filteredFoods() {
+    final query = _normalize(_searchController.text);
 
     if (query.isEmpty) {
-      return false;
+      return widget.foodItems.take(8).toList();
     }
 
-    return widget.foodItems.any((food) => food.normalizedName == query);
+    return widget.foodItems.where((food) {
+      return food.normalizedName.contains(query) ||
+          _normalize(food.name).contains(query);
+    }).take(10).toList();
   }
 
-  String _formatCalories(FoodItemModel food) {
-    final base = food.baseQuantity % 1 == 0
-        ? food.baseQuantity.toStringAsFixed(0)
-        : food.baseQuantity.toStringAsFixed(1);
+  bool _hasExactMatch() {
+    final query = _normalize(_searchController.text);
 
-    return '${food.calories.round()} kcal / $base ${food.unit}';
+    if (query.isEmpty) {
+      return true;
+    }
+
+    return widget.foodItems.any((food) {
+      return food.normalizedName == query || _normalize(food.name) == query;
+    });
   }
 
-  Future<void> _logExistingFood() async {
+  void _selectFood(FoodItemModel food) {
+    setState(() {
+      _selectedFood = food;
+      _searchController.text = food.name;
+      _quantityController.text = _formatQuantity(food.baseQuantity);
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedFood = null;
+      _quantityController.clear();
+      _noteController.clear();
+    });
+  }
+
+  Future<void> _saveExistingFood() async {
     final selectedFood = _selectedFood;
+    final quantity = double.tryParse(_quantityController.text.trim());
 
     if (selectedFood == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -108,8 +131,6 @@ class _FoodEntrySheetState extends State<FoodEntrySheet> {
       );
       return;
     }
-
-    final quantity = double.tryParse(_quantityController.text.trim());
 
     if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -133,26 +154,45 @@ class _FoodEntrySheetState extends State<FoodEntrySheet> {
     }
   }
 
-  Future<void> _addMissingFoodAndLog() async {
-    final name = _searchController.text.trim();
-    final baseQuantity =
-        double.tryParse(_baseQuantityController.text.trim());
-    final calories = double.tryParse(_caloriesController.text.trim());
-    final logQuantity = double.tryParse(_quantityController.text.trim());
+  Future<void> _saveMissingFood() async {
+    final searchedName = _searchController.text.trim();
+    final typedName = _newFoodNameController.text.trim();
 
-    if (name.isEmpty ||
-        baseQuantity == null ||
-        calories == null ||
-        logQuantity == null) {
+    final name = typedName.isNotEmpty ? typedName : searchedName;
+    final baseQuantity = double.tryParse(
+      _newBaseQuantityController.text.trim(),
+    );
+    final calories = double.tryParse(
+      _newCaloriesController.text.trim(),
+    );
+    final logQuantity = double.tryParse(
+      _newLogQuantityController.text.trim(),
+    );
+
+    if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields.')),
+        const SnackBar(content: Text('Please enter a food name.')),
       );
       return;
     }
 
-    if (baseQuantity <= 0 || calories < 0 || logQuantity <= 0) {
+    if (baseQuantity == null || baseQuantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid numbers.')),
+        const SnackBar(content: Text('Please enter a valid base quantity.')),
+      );
+      return;
+    }
+
+    if (calories == null || calories < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid calories.')),
+      );
+      return;
+    }
+
+    if (logQuantity == null || logQuantity <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid log quantity.')),
       );
       return;
     }
@@ -177,154 +217,103 @@ class _FoodEntrySheetState extends State<FoodEntrySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredFoods = _filteredFoods;
-    final showAddMissingFoodForm =
-        _hasSearchText && !_exactMatchExists && _selectedFood == null;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final colorScheme = Theme.of(context).colorScheme;
+    final filteredFoods = _filteredFoods();
+    final query = _searchController.text.trim();
+    final showMissingFoodForm = query.isNotEmpty && !_hasExactMatch();
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomPadding),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Log Food',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Search food',
-                hintText: 'Example: rice, egg, banana',
-                prefixIcon: Icon(Icons.search_rounded),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) {
-                setState(() {
-                  _selectedFood = null;
-                });
-              },
-            ),
-            const SizedBox(height: 12),
-            if (_selectedFood != null)
-              _SelectedFoodCard(
-                food: _selectedFood!,
-                onClear: () {
-                  setState(() {
-                    _selectedFood = null;
-                  });
-                },
-              )
-            else
-              _FoodSearchResults(
-                foods: filteredFoods,
-                formatCalories: _formatCalories,
-                onSelected: (food) {
-                  setState(() {
-                    _selectedFood = food;
-                    _searchController.text = food.name;
-                  });
-                },
-              ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _quantityController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: _selectedFood == null
-                    ? 'Quantity consumed'
-                    : 'Quantity consumed (${_selectedFood!.unit})',
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Note optional',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (showAddMissingFoodForm) ...[
-              const SizedBox(height: 20),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Food not found. Add it to dictionary:',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-              const SizedBox(height: 12),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.gap20,
+            AppSpacing.gap16,
+            AppSpacing.gap20,
+            AppSpacing.gap24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _baseQuantityController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Base quantity',
-                        hintText: '100',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                  CircleAvatar(
+                    backgroundColor: colorScheme.primaryContainer,
+                    foregroundColor: colorScheme.onPrimaryContainer,
+                    child: const Icon(Icons.restaurant_rounded),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.gap12),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _newFoodUnit,
-                      decoration: const InputDecoration(
-                        labelText: 'Unit',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _units.map((unit) {
-                        return DropdownMenuItem<String>(
-                          value: unit,
-                          child: Text(unit),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _newFoodUnit = value;
-                          });
-                        }
-                      },
+                    child: Text(
+                      'Log Food',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.gap16),
               TextField(
-                controller: _caloriesController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Calories for base quantity',
-                  hintText: 'Example: 130',
-                  border: OutlineInputBorder(),
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search food',
+                  hintText: 'Example: rice, egg, banana',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: query.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            _clearSelection();
+                          },
+                          icon: const Icon(Icons.clear_rounded),
+                        ),
+                  border: const OutlineInputBorder(),
                 ),
               ),
+              const SizedBox(height: AppSpacing.gap16),
+              if (_selectedFood != null)
+                _SelectedFoodSection(
+                  food: _selectedFood!,
+                  quantityController: _quantityController,
+                  noteController: _noteController,
+                  isSaving: _isSaving,
+                  onChangeFood: _clearSelection,
+                  onSave: _saveExistingFood,
+                )
+              else ...[
+                _FoodSearchResults(
+                  foods: filteredFoods,
+                  onSelectFood: _selectFood,
+                ),
+                if (showMissingFoodForm) ...[
+                  const SizedBox(height: AppSpacing.gap16),
+                  _MissingFoodForm(
+                    searchedName: query,
+                    nameController: _newFoodNameController,
+                    baseQuantityController: _newBaseQuantityController,
+                    caloriesController: _newCaloriesController,
+                    logQuantityController: _newLogQuantityController,
+                    noteController: _noteController,
+                    unit: _newFoodUnit,
+                    isSaving: _isSaving,
+                    onUnitChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+
+                      setState(() {
+                        _newFoodUnit = value;
+                      });
+                    },
+                    onSave: _saveMissingFood,
+                  ),
+                ],
+              ],
             ],
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: _isSaving
-                  ? null
-                  : _selectedFood == null
-                      ? _addMissingFoodAndLog
-                      : _logExistingFood,
-              icon: const Icon(Icons.add_rounded),
-              label: Text(
-                _isSaving
-                    ? 'Saving...'
-                    : _selectedFood == null
-                        ? 'Save Food & Log'
-                        : 'Add Log',
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -334,70 +323,332 @@ class _FoodEntrySheetState extends State<FoodEntrySheet> {
 class _FoodSearchResults extends StatelessWidget {
   const _FoodSearchResults({
     required this.foods,
-    required this.formatCalories,
-    required this.onSelected,
+    required this.onSelectFood,
   });
 
   final List<FoodItemModel> foods;
-  final String Function(FoodItemModel food) formatCalories;
-  final ValueChanged<FoodItemModel> onSelected;
+  final ValueChanged<FoodItemModel> onSelectFood;
+
+  String _formatQuantity(double value) {
+    if (value % 1 == 0) {
+      return value.toStringAsFixed(0);
+    }
+
+    return value.toStringAsFixed(1);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (foods.isEmpty) {
-      return const Align(
-        alignment: Alignment.centerLeft,
-        child: Text('No matching food found.'),
+      return AppCard(
+        child: Row(
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.gap8),
+            Expanded(
+              child: Text(
+                'No matching food found. Add it below.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 220),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: foods.length,
-        itemBuilder: (context, index) {
-          final food = foods[index];
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              title: Text(food.name),
-              subtitle: Text('${food.category} • ${formatCalories(food)}'),
-              trailing: const Icon(Icons.add_circle_outline_rounded),
-              onTap: () => onSelected(food),
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Choose from dictionary',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.gap8),
+        ...foods.map((food) {
+          return AppCard(
+            margin: const EdgeInsets.only(bottom: AppSpacing.gap8),
+            padding: const EdgeInsets.all(AppSpacing.gap12),
+            onTap: () => onSelectFood(food),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: colorScheme.primaryContainer,
+                  foregroundColor: colorScheme.onPrimaryContainer,
+                  child: const Icon(
+                    Icons.restaurant_menu_rounded,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.gap12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        food.name,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.gap4),
+                      Text(
+                        '${food.calories.round()} kcal / '
+                        '${_formatQuantity(food.baseQuantity)} ${food.unit}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded),
+              ],
             ),
           );
-        },
-      ),
+        }),
+      ],
     );
   }
 }
 
-class _SelectedFoodCard extends StatelessWidget {
-  const _SelectedFoodCard({
+class _SelectedFoodSection extends StatelessWidget {
+  const _SelectedFoodSection({
     required this.food,
-    required this.onClear,
+    required this.quantityController,
+    required this.noteController,
+    required this.isSaving,
+    required this.onChangeFood,
+    required this.onSave,
   });
 
   final FoodItemModel food;
-  final VoidCallback onClear;
+  final TextEditingController quantityController;
+  final TextEditingController noteController;
+  final bool isSaving;
+  final VoidCallback onChangeFood;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
-    final base = food.baseQuantity % 1 == 0
-        ? food.baseQuantity.toStringAsFixed(0)
-        : food.baseQuantity.toStringAsFixed(1);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.restaurant_menu_rounded),
-        title: Text(food.name),
-        subtitle: Text('${food.calories.round()} kcal / $base ${food.unit}'),
-        trailing: IconButton(
-          onPressed: onClear,
-          icon: const Icon(Icons.close_rounded),
+    return Column(
+      children: [
+        AppCard(
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: colorScheme.primaryContainer,
+                foregroundColor: colorScheme.onPrimaryContainer,
+                child: const Icon(Icons.check_rounded),
+              ),
+              const SizedBox(width: AppSpacing.gap12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      food.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: AppSpacing.gap4),
+                    Text(
+                      '${food.calories.round()} kcal / '
+                      '${food.baseQuantity.round()} ${food.unit}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: onChangeFood,
+                child: const Text('Change'),
+              ),
+            ],
+          ),
         ),
+        const SizedBox(height: AppSpacing.gap16),
+        TextField(
+          controller: quantityController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Quantity (${food.unit})',
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.gap12),
+        TextField(
+          controller: noteController,
+          decoration: const InputDecoration(
+            labelText: 'Note optional',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.gap20),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: isSaving ? null : onSave,
+            icon: const Icon(Icons.save_rounded),
+            label: Text(isSaving ? 'Saving...' : 'Log Food'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MissingFoodForm extends StatelessWidget {
+  const _MissingFoodForm({
+    required this.searchedName,
+    required this.nameController,
+    required this.baseQuantityController,
+    required this.caloriesController,
+    required this.logQuantityController,
+    required this.noteController,
+    required this.unit,
+    required this.isSaving,
+    required this.onUnitChanged,
+    required this.onSave,
+  });
+
+  final String searchedName;
+  final TextEditingController nameController;
+  final TextEditingController baseQuantityController;
+  final TextEditingController caloriesController;
+  final TextEditingController logQuantityController;
+  final TextEditingController noteController;
+  final String unit;
+  final bool isSaving;
+  final ValueChanged<String?> onUnitChanged;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add "$searchedName" to dictionary',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.gap4),
+          Text(
+            'Save its calories once. Next time it will appear in search.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.gap16),
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: 'Food name',
+              hintText: searchedName,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gap12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: baseQuantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Base qty',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.gap8),
+              SizedBox(
+                width: 110,
+                child: DropdownButtonFormField<String>(
+                  initialValue: unit,
+                  decoration: const InputDecoration(
+                    labelText: 'Unit',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'g',
+                      child: Text('g'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'ml',
+                      child: Text('ml'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'piece',
+                      child: Text('piece'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'cup',
+                      child: Text('cup'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'plate',
+                      child: Text('plate'),
+                    ),
+                  ],
+                  onChanged: onUnitChanged,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.gap12),
+          TextField(
+            controller: caloriesController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Calories for base quantity',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gap12),
+          TextField(
+            controller: logQuantityController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Quantity eaten ($unit)',
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gap12),
+          TextField(
+            controller: noteController,
+            decoration: const InputDecoration(
+              labelText: 'Note optional',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gap20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: isSaving ? null : onSave,
+              icon: const Icon(Icons.save_rounded),
+              label: Text(isSaving ? 'Saving...' : 'Save and Log Food'),
+            ),
+          ),
+        ],
       ),
     );
   }

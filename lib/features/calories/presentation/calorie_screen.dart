@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_spacing.dart';
 import '../../../data/local/models/food_log_model.dart';
+import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/date_selector.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../application/calorie_controller.dart';
@@ -166,11 +168,9 @@ class CalorieScreen extends ConsumerWidget {
       controller.clearMessage();
     });
 
-    final remaining = calorieState.remainingCalories;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calorie Tracker'),
+        title: const Text('Calories'),
         actions: [
           IconButton(
             onPressed: () => _openTargetDialog(
@@ -190,71 +190,35 @@ class CalorieScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openFoodEntrySheet(context, ref),
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(Icons.restaurant_rounded),
         label: const Text('Food'),
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.gap12,
+          AppSpacing.screenPadding,
+          0,
+        ),
         child: Column(
           children: [
             DateSelector(
               selectedDate: calorieState.selectedDate,
               onDateChanged: controller.loadForDate,
             ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.local_fire_department_rounded,
-                          size: 36,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'Daily Intake',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ),
-                        Text(
-                          '${calorieState.dailyTotalCalories.round()} kcal',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    LinearProgressIndicator(
-                      value: calorieState.targetProgress,
-                      minHeight: 8,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Text(
-                          'Target: ${calorieState.dailyCalorieTarget.round()} kcal',
-                        ),
-                        const Spacer(),
-                        Text(
-                          remaining >= 0
-                              ? '${remaining.round()} kcal left'
-                              : '${remaining.abs().round()} kcal over',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: remaining >= 0 ? null : Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            const SizedBox(height: AppSpacing.gap16),
+            _DailyCalorieCard(
+              totalCalories: calorieState.dailyTotalCalories,
+              targetCalories: calorieState.dailyCalorieTarget,
+              remainingCalories: calorieState.remainingCalories,
+              progress: calorieState.targetProgress,
+              onEditTarget: () => _openTargetDialog(
+                context,
+                ref,
+                calorieState.dailyCalorieTarget,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.gap16),
             Expanded(
               child: Builder(
                 builder: (context) {
@@ -265,14 +229,19 @@ class CalorieScreen extends ConsumerWidget {
                   }
 
                   if (calorieState.logs.isEmpty) {
-                    return const EmptyState(
+                    return EmptyState(
                       icon: Icons.restaurant_rounded,
-                      message:
-                          'No food logged for this date.\nTap + Food to add one.',
+                      title: 'No food logged yet',
+                      subtitle: 'Add your first meal or snack for this date.',
+                      actionLabel: '+ Add Food',
+                      onAction: () => _openFoodEntrySheet(context, ref),
                     );
                   }
 
                   return ListView.builder(
+                    padding: const EdgeInsets.only(
+                      bottom: AppSpacing.bottomScrollPadding,
+                    ),
                     itemCount: calorieState.logs.length,
                     itemBuilder: (context, index) {
                       final log = calorieState.logs[index];
@@ -290,6 +259,152 @@ class CalorieScreen extends ConsumerWidget {
                   );
                 },
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyCalorieCard extends StatelessWidget {
+  const _DailyCalorieCard({
+    required this.totalCalories,
+    required this.targetCalories,
+    required this.remainingCalories,
+    required this.progress,
+    required this.onEditTarget,
+  });
+
+  final double totalCalories;
+  final double targetCalories;
+  final double remainingCalories;
+  final double progress;
+  final VoidCallback onEditTarget;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isOverTarget = remainingCalories < 0;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: colorScheme.primaryContainer,
+                foregroundColor: colorScheme.onPrimaryContainer,
+                child: const Icon(Icons.local_fire_department_rounded),
+              ),
+              const SizedBox(width: AppSpacing.gap12),
+              Expanded(
+                child: Text(
+                  'Daily Intake',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onEditTarget,
+                icon: const Icon(Icons.flag_rounded, size: 18),
+                label: const Text('Target'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.gap16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                totalCalories.round().toString(),
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(width: AppSpacing.gap4),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.gap8),
+                child: Text(
+                  'kcal logged',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.gap12),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(999),
+            color: isOverTarget ? colorScheme.error : colorScheme.tertiary,
+          ),
+          const SizedBox(height: AppSpacing.gap12),
+          Row(
+            children: [
+              _SmallMetric(
+                label: 'Target',
+                value: '${targetCalories.round()} kcal',
+              ),
+              const SizedBox(width: AppSpacing.gap8),
+              _SmallMetric(
+                label: isOverTarget ? 'Over' : 'Left',
+                value: '${remainingCalories.abs().round()} kcal',
+                valueColor: isOverTarget ? colorScheme.error : colorScheme.tertiary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SmallMetric extends StatelessWidget {
+  const _SmallMetric({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.gap12),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: colorScheme.outlineVariant,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.gap4),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: valueColor,
+                    fontWeight: FontWeight.w800,
+                  ),
             ),
           ],
         ),
