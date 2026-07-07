@@ -30,6 +30,28 @@ class DateSelector extends StatelessWidget {
     onDateChanged(AppDateUtils.today());
   }
 
+  Future<void> _openCalendarPicker(BuildContext context) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      helpText: 'Choose date',
+    );
+
+    if (pickedDate == null) {
+      return;
+    }
+
+    onDateChanged(
+      DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+      ),
+    );
+  }
+
   bool get _isToday {
     return AppDateUtils.dateKey(selectedDate) ==
         AppDateUtils.dateKey(AppDateUtils.today());
@@ -41,47 +63,83 @@ class DateSelector extends StatelessWidget {
 
     return AppCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.gap12,
+        horizontal: AppSpacing.gap8,
         vertical: AppSpacing.gap8,
       ),
-      child: Row(
+      child: Column(
         children: [
-          IconButton(
-            onPressed: _goToPreviousDay,
-            icon: const Icon(Icons.chevron_left_rounded),
-            tooltip: 'Previous day',
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  _isToday ? 'Today' : AppDateUtils.formatShortDate(selectedDate),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+          Row(
+            children: [
+              IconButton(
+                onPressed: _goToPreviousDay,
+                icon: const Icon(Icons.chevron_left_rounded),
+                tooltip: 'Previous day',
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _openCalendarPicker(context),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.gap8,
+                      vertical: AppSpacing.gap8,
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_month_rounded,
+                              size: 18,
+                              color: colorScheme.tertiary,
+                            ),
+                            const SizedBox(width: AppSpacing.gap4),
+                            Flexible(
+                              child: Text(
+                                _isToday
+                                    ? 'Today'
+                                    : AppDateUtils.formatShortDate(selectedDate),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.gap4),
+                        Text(
+                          AppDateUtils.formatFullDate(selectedDate),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.gap4),
-                Text(
-                  AppDateUtils.formatFullDate(selectedDate),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: _goToNextDay,
-            icon: const Icon(Icons.chevron_right_rounded),
-            tooltip: 'Next day',
+              ),
+              IconButton(
+                onPressed: _goToNextDay,
+                icon: const Icon(Icons.chevron_right_rounded),
+                tooltip: 'Next day',
+              ),
+            ],
           ),
           if (!_isToday) ...[
-            const SizedBox(width: AppSpacing.gap4),
-            TextButton(
+            const SizedBox(height: AppSpacing.gap4),
+            TextButton.icon(
               onPressed: _goToToday,
-              child: const Text('Today'),
+              icon: const Icon(Icons.today_rounded, size: 18),
+              label: const Text('Back to Today'),
             ),
           ],
         ],
