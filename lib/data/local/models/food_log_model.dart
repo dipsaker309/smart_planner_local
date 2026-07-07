@@ -1,48 +1,97 @@
-import 'food_item_model.dart';
-
 class FoodLogModel {
   const FoodLogModel({
     required this.id,
-    required this.date,
-    required this.items,
+    required this.logDate,
+    required this.foodItemId,
+    required this.foodName,
+    required this.quantity,
+    required this.unit,
+    required this.calculatedCalories,
+    required this.consumedAt,
     required this.createdAt,
+    required this.updatedAt,
     this.note = '',
+    this.isDeleted = false,
   });
 
   final String id;
-  final DateTime date;
-  final List<FoodItemModel> items;
-  final String note;
+  final String logDate; // yyyy-MM-dd
+  final String foodItemId;
+  final String foodName;
+  final double quantity;
+  final String unit;
+  final double calculatedCalories;
+  final DateTime consumedAt;
   final DateTime createdAt;
+  final DateTime updatedAt;
+  final String note;
+  final bool isDeleted;
 
-  int get totalCalories {
-    return items.fold(0, (total, item) => total + item.totalCalories);
+  FoodLogModel copyWith({
+    String? id,
+    String? logDate,
+    String? foodItemId,
+    String? foodName,
+    double? quantity,
+    String? unit,
+    double? calculatedCalories,
+    DateTime? consumedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? note,
+    bool? isDeleted,
+  }) {
+    return FoodLogModel(
+      id: id ?? this.id,
+      logDate: logDate ?? this.logDate,
+      foodItemId: foodItemId ?? this.foodItemId,
+      foodName: foodName ?? this.foodName,
+      quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
+      calculatedCalories: calculatedCalories ?? this.calculatedCalories,
+      consumedAt: consumedAt ?? this.consumedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      note: note ?? this.note,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'date': date.toIso8601String(),
-      'items': items.map((item) => item.toMap()).toList(),
-      'note': note,
+      'logDate': logDate,
+      'foodItemId': foodItemId,
+      'foodName': foodName,
+      'quantity': quantity,
+      'unit': unit,
+      'calculatedCalories': calculatedCalories,
+      'consumedAt': consumedAt.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'note': note,
+      'isDeleted': isDeleted,
     };
   }
 
-  factory FoodLogModel.fromMap(Map<String, dynamic> map) {
-    final rawItems = map['items'] as List<dynamic>? ?? [];
-
+  factory FoodLogModel.fromMap(Map<dynamic, dynamic> map) {
     return FoodLogModel(
       id: map['id'] as String,
-      date: DateTime.tryParse(map['date'] as String? ?? '') ?? DateTime.now(),
-      items: rawItems
-          .map((item) => FoodItemModel.fromMap(
-                Map<String, dynamic>.from(item as Map),
-              ))
-          .toList(),
+      logDate: map['logDate'] as String,
+      foodItemId: map['foodItemId'] as String,
+      foodName: map['foodName'] as String,
+      quantity: (map['quantity'] as num?)?.toDouble() ?? 1,
+      unit: map['unit'] as String? ?? 'g',
+      calculatedCalories:
+          (map['calculatedCalories'] as num?)?.toDouble() ?? 0,
+      consumedAt: DateTime.tryParse(map['consumedAt']?.toString() ?? '') ??
+          DateTime.now(),
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt: DateTime.tryParse(map['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
       note: map['note'] as String? ?? '',
-      createdAt:
-          DateTime.tryParse(map['createdAt'] as String? ?? '') ?? DateTime.now(),
+      isDeleted: map['isDeleted'] as bool? ?? false,
     );
   }
 }
