@@ -84,6 +84,7 @@ class PlannerController extends Notifier<PlannerState> {
   Future<void> addTask({
     required String title,
     String description = '',
+    String priority = 'medium',
   }) async {
     if (title.trim().isEmpty) {
       state = state.copyWith(message: 'Task title cannot be empty.');
@@ -94,6 +95,7 @@ class PlannerController extends Notifier<PlannerState> {
       date: state.selectedDate,
       title: title,
       description: description,
+      priority: priority,
     );
 
     await loadTasksForDate(state.selectedDate);
@@ -108,27 +110,12 @@ class PlannerController extends Notifier<PlannerState> {
       progress: progress,
     );
 
-    final updatedTasks = state.tasks.map((task) {
-      if (task.id != taskId) {
-        return task;
-      }
-
-      return task.copyWith(
-        progress: progress.clamp(0, 100),
-        updatedAt: DateTime.now(),
-      );
-    }).toList();
-
-    state = state.copyWith(tasks: updatedTasks);
+    await loadTasksForDate(state.selectedDate);
   }
 
   Future<void> deleteTask(String taskId) async {
     await _repository.deleteTask(taskId);
-
-    final updatedTasks =
-        state.tasks.where((task) => task.id != taskId).toList();
-
-    state = state.copyWith(tasks: updatedTasks);
+    await loadTasksForDate(state.selectedDate);
   }
 
   Future<void> rolloverFromPreviousDay() async {

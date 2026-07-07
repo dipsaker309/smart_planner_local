@@ -5,6 +5,7 @@ class TaskModel {
     required this.title,
     required this.description,
     required this.progress,
+    required this.priority,
     required this.isDeleted,
     required this.createdAt,
     required this.updatedAt,
@@ -16,6 +17,7 @@ class TaskModel {
   final String title;
   final String description;
   final int progress; // 0 to 100
+  final String priority; // low, medium, high
   final String? rolloverSourceTaskId;
   final bool isDeleted;
   final DateTime createdAt;
@@ -31,12 +33,38 @@ class TaskModel {
     return 'Partial';
   }
 
+  String get priorityLabel {
+    switch (priority) {
+      case 'high':
+        return 'High';
+      case 'low':
+        return 'Low';
+      case 'medium':
+      default:
+        return 'Medium';
+    }
+  }
+
+  int get priorityRank {
+    switch (priority) {
+      case 'high':
+        return 0;
+      case 'medium':
+        return 1;
+      case 'low':
+        return 2;
+      default:
+        return 1;
+    }
+  }
+
   TaskModel copyWith({
     String? id,
     String? planDate,
     String? title,
     String? description,
     int? progress,
+    String? priority,
     String? rolloverSourceTaskId,
     bool? isDeleted,
     DateTime? createdAt,
@@ -48,6 +76,7 @@ class TaskModel {
       title: title ?? this.title,
       description: description ?? this.description,
       progress: progress ?? this.progress,
+      priority: priority ?? this.priority,
       rolloverSourceTaskId: rolloverSourceTaskId ?? this.rolloverSourceTaskId,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
@@ -62,6 +91,7 @@ class TaskModel {
       'title': title,
       'description': description,
       'progress': progress,
+      'priority': priority,
       'rolloverSourceTaskId': rolloverSourceTaskId,
       'isDeleted': isDeleted,
       'createdAt': createdAt.toIso8601String(),
@@ -76,6 +106,7 @@ class TaskModel {
       title: map['title'] as String,
       description: (map['description'] as String?) ?? '',
       progress: (map['progress'] as num?)?.toInt() ?? 0,
+      priority: map['priority'] as String? ?? 'medium',
       rolloverSourceTaskId: map['rolloverSourceTaskId'] as String?,
       isDeleted: (map['isDeleted'] as bool?) ?? false,
       createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??

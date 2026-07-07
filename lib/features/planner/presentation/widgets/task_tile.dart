@@ -27,9 +27,22 @@ class TaskTile extends StatelessWidget {
     return Theme.of(context).colorScheme.outline;
   }
 
+  Color _priorityColor() {
+    switch (task.priority) {
+      case 'high':
+        return Colors.red;
+      case 'low':
+        return Colors.blueGrey;
+      case 'medium':
+      default:
+        return Colors.amber.shade800;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColor(context);
+    final priorityColor = _priorityColor();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -75,13 +88,26 @@ class TaskTile extends StatelessWidget {
             ],
             const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.only(left: 28),
-              child: Text(
-                task.statusLabel,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: statusColor,
-                      fontWeight: FontWeight.w600,
+              padding: const EdgeInsets.only(left: 36),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  Chip(
+                    label: Text(task.statusLabel),
+                    visualDensity: VisualDensity.compact,
+                    side: BorderSide(color: statusColor),
+                  ),
+                  Chip(
+                    label: Text('${task.priorityLabel} priority'),
+                    visualDensity: VisualDensity.compact,
+                    side: BorderSide(color: priorityColor),
+                    avatar: Icon(
+                      Icons.flag_rounded,
+                      size: 18,
+                      color: priorityColor,
                     ),
+                  ),
+                ],
               ),
             ),
             ProgressSlider(

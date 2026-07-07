@@ -4,9 +4,14 @@ import '../../../core/utils/date_utils.dart';
 import '../../../data/local/models/food_item_model.dart';
 import '../../../data/local/models/food_log_model.dart';
 import '../../../data/local/repositories/food_repository.dart';
+import '../../../data/local/repositories/settings_repository.dart';
 
 final foodRepositoryProvider = Provider<FoodRepository>((ref) {
   return FoodRepository();
+});
+
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  return SettingsRepository();
 });
 
 final calorieControllerProvider =
@@ -20,6 +25,7 @@ class CalorieState {
     required this.foodItems,
     required this.logs,
     required this.dailyTotalCalories,
+    required this.dailyCalorieTarget,
     required this.isLoading,
     this.message,
   });
@@ -30,6 +36,7 @@ class CalorieState {
       foodItems: const [],
       logs: const [],
       dailyTotalCalories: 0,
+      dailyCalorieTarget: 2000,
       isLoading: false,
     );
   }
@@ -38,14 +45,26 @@ class CalorieState {
   final List<FoodItemModel> foodItems;
   final List<FoodLogModel> logs;
   final double dailyTotalCalories;
+  final double dailyCalorieTarget;
   final bool isLoading;
   final String? message;
+
+  double get remainingCalories => dailyCalorieTarget - dailyTotalCalories;
+
+  double get targetProgress {
+    if (dailyCalorieTarget <= 0) {
+      return 0;
+    }
+
+    return (dailyTotalCalories / dailyCalorieTarget).clamp(0, 1).toDouble();
+  }
 
   CalorieState copyWith({
     DateTime? selectedDate,
     List<FoodItemModel>? foodItems,
     List<FoodLogModel>? logs,
     double? dailyTotalCalories,
+    double? dailyCalorieTarget,
     bool? isLoading,
     String? message,
   }) {
@@ -54,6 +73,7 @@ class CalorieState {
       foodItems: foodItems ?? this.foodItems,
       logs: logs ?? this.logs,
       dailyTotalCalories: dailyTotalCalories ?? this.dailyTotalCalories,
+      dailyCalorieTarget: dailyCalorieTarget ?? this.dailyCalorieTarget,
       isLoading: isLoading ?? this.isLoading,
       message: message,
     );
@@ -61,16 +81,18 @@ class CalorieState {
 }
 
 class CalorieController extends Notifier<CalorieState> {
-  late final FoodRepository _repository;
+  late final FoodRepository _foodRepository;
+  late final SettingsRepository _settingsRepository;
 
   @override
   CalorieState build() {
-    _repository = ref.read(foodRepositoryProvider);
+    _foodRepository = ref.read(foodRepositoryProvider);
+    _settingsRepository = ref.read(settingsRepositoryProvider);
 
     final initialState = CalorieState.initial();
 
     Future.microtask(() async {
-      await _repository.seedStarterFoodsIfNeeded();
+      await _foodRepository.seedStarterFoodsIfNeeded();
       loadForDate(initialState.selectedDate);
     });
 
@@ -84,16 +106,32 @@ class CalorieController extends Notifier<CalorieState> {
       message: null,
     );
 
-    final foodItems = _repository.getFoodItems();
-    final logs = _repository.getFoodLogsByDate(date);
-    final total = _repository.getDailyTotalCalories(date);
+    final foodItems = _foodRepository.getFoodItems();
+    final logs = _foodRepository.getFoodLogsByDate(date);
+    final total = _foodRepository.getDailyTotalCalories(date);
+    final target = _settingsRepository.getDailyCalorieTarget();
 
     state = state.copyWith(
       selectedDate: date,
       foodItems: foodItems,
       logs: logs,
       dailyTotalCalories: total,
+      dailyCalorieTarget: target,
       isLoading: false,
+    );
+  }
+
+  Future<void> updateDailyCalorieTarget(double target) async {
+    if (target <= 0) {
+      state = state.copyWith(message: 'Please enter a valid calorie target.');
+      return;
+    }
+
+    await _settingsRepository.setDailyCalorieTarget(target);
+
+    state = state.copyWith(
+      dailyCalorieTarget: target,
+      message: 'Daily calorie target updated.',
     );
   }
 
@@ -107,14 +145,14 @@ class CalorieController extends Notifier<CalorieState> {
       return;
     }
 
-    final foodItem = _repository.getFoodItemById(foodItemId);
+    final foodItem = _foodRepository.getFoodItemById(foodItemId);
 
     if (foodItem == null) {
       state = state.copyWith(message: 'Selected food was not found.');
       return;
     }
 
-    await _repository.addFoodLog(
+    await _foodRepository.addFoodLog(
       date: state.selectedDate,
       foodItem: foodItem,
       quantity: quantity,
@@ -142,7 +180,7 @@ class CalorieController extends Notifier<CalorieState> {
       return;
     }
 
-    await _repository.addCustomFoodAndLog(
+    await _foodRepository.addCustomFoodAndLog(
       date: state.selectedDate,
       name: name,
       baseQuantity: baseQuantity,
@@ -158,7 +196,7 @@ class CalorieController extends Notifier<CalorieState> {
   }
 
   Future<void> deleteFoodLog(String id) async {
-    await _repository.deleteFoodLog(id);
+    await _foodRepository.deleteFoodLog(id);
     loadForDate(state.selectedDate);
   }
 

@@ -23,10 +23,12 @@ class PlannerScreen extends ConsumerWidget {
           onSubmit: ({
             required String title,
             required String description,
+            required String priority,
           }) {
             return ref.read(plannerControllerProvider.notifier).addTask(
                   title: title,
                   description: description,
+                  priority: priority,
                 );
           },
         );

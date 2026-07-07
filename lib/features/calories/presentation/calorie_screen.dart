@@ -67,6 +67,57 @@ class CalorieScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openTargetDialog(
+    BuildContext context,
+    WidgetRef ref,
+    double currentTarget,
+  ) async {
+    final controller = TextEditingController(
+      text: currentTarget.round().toString(),
+    );
+
+    final newTarget = await showDialog<double>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Daily calorie target'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Target calories',
+              hintText: 'Example: 2000',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = double.tryParse(controller.text.trim());
+                Navigator.of(context).pop(value);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (newTarget == null) {
+      return;
+    }
+
+    await ref
+        .read(calorieControllerProvider.notifier)
+        .updateDailyCalorieTarget(newTarget);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final calorieState = ref.watch(calorieControllerProvider);
@@ -86,10 +137,21 @@ class CalorieScreen extends ConsumerWidget {
       controller.clearMessage();
     });
 
+    final remaining = calorieState.remainingCalories;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calorie Tracker'),
         actions: [
+          IconButton(
+            onPressed: () => _openTargetDialog(
+              context,
+              ref,
+              calorieState.dailyCalorieTarget,
+            ),
+            icon: const Icon(Icons.flag_rounded),
+            tooltip: 'Set calorie target',
+          ),
           IconButton(
             onPressed: () => _openAnalytics(context),
             icon: const Icon(Icons.bar_chart_rounded),
@@ -114,19 +176,50 @@ class CalorieScreen extends ConsumerWidget {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   children: [
-                    const Icon(Icons.local_fire_department_rounded, size: 36),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'Daily Intake',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 36,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Daily Intake',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        Text(
+                          '${calorieState.dailyTotalCalories.round()} kcal',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ],
                     ),
-                    Text(
-                      '${calorieState.dailyTotalCalories.round()} kcal',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    const SizedBox(height: 14),
+                    LinearProgressIndicator(
+                      value: calorieState.targetProgress,
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Text(
+                          'Target: ${calorieState.dailyCalorieTarget.round()} kcal',
+                        ),
+                        const Spacer(),
+                        Text(
+                          remaining >= 0
+                              ? '${remaining.round()} kcal left'
+                              : '${remaining.abs().round()} kcal over',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: remaining >= 0 ? null : Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

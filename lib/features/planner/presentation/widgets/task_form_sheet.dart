@@ -9,6 +9,7 @@ class TaskFormSheet extends StatefulWidget {
   final Future<void> Function({
     required String title,
     required String description,
+    required String priority,
   }) onSubmit;
 
   @override
@@ -19,6 +20,7 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
+  String _priority = 'medium';
   bool _isSaving = false;
 
   @override
@@ -46,6 +48,7 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
     await widget.onSubmit(
       title: title,
       description: description,
+      priority: _priority,
     );
 
     if (mounted) {
@@ -86,6 +89,35 @@ class _TaskFormSheetState extends State<TaskFormSheet> {
                 labelText: 'Description optional',
                 border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _priority,
+              decoration: const InputDecoration(
+                labelText: 'Priority',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'high',
+                  child: Text('High'),
+                ),
+                DropdownMenuItem(
+                  value: 'medium',
+                  child: Text('Medium'),
+                ),
+                DropdownMenuItem(
+                  value: 'low',
+                  child: Text('Low'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _priority = value;
+                  });
+                }
+              },
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
