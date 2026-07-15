@@ -8,4 +8,7 @@ class HiveBoxes {
   static const String foodDictionary = AppConstants.foodDictionaryBox;
   static const String rolloverHistory = AppConstants.rolloverHistoryBox;
   static const String settings = AppConstants.settingsBox;
+
+  // Wellness boxes
+  static const String water = AppConstants.waterBox;
 }

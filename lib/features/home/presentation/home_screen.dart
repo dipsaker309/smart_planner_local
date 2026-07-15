@@ -5,6 +5,7 @@ import '../../calories/presentation/calorie_screen.dart';
 import '../../dashboard/application/dashboard_controller.dart';
 import '../../dashboard/presentation/dashboard_screen.dart';
 import '../../planner/presentation/planner_screen.dart';
+import '../../wellness/presentation/wellness_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -35,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       const PlannerScreen(),
       const CalorieScreen(),
+      const WellnessScreen(),
     ];
 
     return Scaffold(
@@ -60,6 +62,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.restaurant_menu_outlined),
             selectedIcon: Icon(Icons.restaurant_menu_rounded),
             label: 'Calories',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.spa_outlined),
+            selectedIcon: Icon(Icons.spa_rounded),
+            label: 'Wellness',
           ),
         ],
       ),

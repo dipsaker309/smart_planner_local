@@ -8,4 +8,7 @@ class AppConstants {
   static const String foodDictionaryBox = 'food_dictionary_box';
   static const String rolloverHistoryBox = 'rollover_history_box';
   static const String settingsBox = 'settings_box';
+
+  // Wellness boxes
+  static const String waterBox = 'water_box';
 }
