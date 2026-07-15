@@ -7,6 +7,7 @@ class FoodItemModel {
     required this.unit,
     required this.calories,
     required this.category,
+    required this.isTreatFood,
     required this.isUserCreated,
     required this.createdAt,
     required this.updatedAt,
@@ -16,17 +17,12 @@ class FoodItemModel {
   final String id;
   final String name;
   final String normalizedName;
-
-  /// Example:
-  /// Cooked Rice → baseQuantity = 100, unit = g, calories = 130
-  /// Boiled Egg → baseQuantity = 1, unit = piece, calories = 78
   final double baseQuantity;
   final String unit;
   final double calories;
-
   final String category;
+  final bool isTreatFood;
   final bool isUserCreated;
-
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -47,6 +43,7 @@ class FoodItemModel {
     String? unit,
     double? calories,
     String? category,
+    bool? isTreatFood,
     bool? isUserCreated,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -60,6 +57,7 @@ class FoodItemModel {
       unit: unit ?? this.unit,
       calories: calories ?? this.calories,
       category: category ?? this.category,
+      isTreatFood: isTreatFood ?? this.isTreatFood,
       isUserCreated: isUserCreated ?? this.isUserCreated,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -76,6 +74,7 @@ class FoodItemModel {
       'unit': unit,
       'calories': calories,
       'category': category,
+      'isTreatFood': isTreatFood,
       'isUserCreated': isUserCreated,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -92,6 +91,7 @@ class FoodItemModel {
       unit: map['unit'] as String? ?? 'g',
       calories: (map['calories'] as num?)?.toDouble() ?? 0,
       category: map['category'] as String? ?? 'General',
+      isTreatFood: map['isTreatFood'] as bool? ?? false,
       isUserCreated: map['isUserCreated'] as bool? ?? false,
       createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
           DateTime.now(),

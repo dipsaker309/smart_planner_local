@@ -15,111 +15,154 @@ class FoodRepository {
   }
 
   Future<void> seedStarterFoodsIfNeeded() async {
-    final existingNormalizedNames = HiveService.foodDictionaryBox.values
-        .map((rawFood) => FoodItemModel.fromMap(rawFood))
-        .map((food) => food.normalizedName)
-        .toSet();
+    final starterFoods = _starterFoods();
 
-    final now = DateTime.now();
-
-    final starterFoods = <FoodItemModel>[
-      _starterFood('Cooked Rice', 100, 'g', 130, 'Rice & Grains', now),
-      _starterFood('Plain Rice', 100, 'g', 130, 'Rice & Grains', now),
-      _starterFood('Fried Rice', 100, 'g', 170, 'Rice & Grains', now),
-      _starterFood('Khichuri', 100, 'g', 150, 'Rice & Grains', now),
-      _starterFood('Pulao', 100, 'g', 180, 'Rice & Grains', now),
-      _starterFood('Chicken Biryani', 100, 'g', 200, 'Rice & Grains', now),
-      _starterFood('Beef Biryani', 100, 'g', 220, 'Rice & Grains', now),
-
-      _starterFood('Roti', 1, 'piece', 120, 'Bread', now),
-      _starterFood('Chapati', 1, 'piece', 120, 'Bread', now),
-      _starterFood('Paratha', 1, 'piece', 260, 'Bread', now),
-      _starterFood('Naan', 1, 'piece', 260, 'Bread', now),
-      _starterFood('Bread', 1, 'slice', 80, 'Bread', now),
-      _starterFood('Toast', 1, 'slice', 75, 'Bread', now),
-
-      _starterFood('Boiled Egg', 1, 'piece', 78, 'Eggs', now),
-      _starterFood('Fried Egg', 1, 'piece', 90, 'Eggs', now),
-      _starterFood('Omelette', 1, 'piece', 120, 'Eggs', now),
-
-      _starterFood('Chicken Breast', 100, 'g', 165, 'Meat & Fish', now),
-      _starterFood('Chicken Curry', 100, 'g', 190, 'Meat & Fish', now),
-      _starterFood('Chicken Roast', 100, 'g', 210, 'Meat & Fish', now),
-      _starterFood('Beef Curry', 100, 'g', 250, 'Meat & Fish', now),
-      _starterFood('Beef', 100, 'g', 250, 'Meat & Fish', now),
-      _starterFood('Mutton Curry', 100, 'g', 280, 'Meat & Fish', now),
-      _starterFood('Fish Curry', 100, 'g', 130, 'Meat & Fish', now),
-      _starterFood('Fried Fish', 100, 'g', 220, 'Meat & Fish', now),
-      _starterFood('Hilsa Fish', 100, 'g', 310, 'Meat & Fish', now),
-      _starterFood('Rui Fish', 100, 'g', 120, 'Meat & Fish', now),
-      _starterFood('Prawn', 100, 'g', 100, 'Meat & Fish', now),
-
-      _starterFood('Dal', 100, 'g', 110, 'Lentils & Beans', now),
-      _starterFood('Masoor Dal', 100, 'g', 115, 'Lentils & Beans', now),
-      _starterFood('Chickpeas', 100, 'g', 164, 'Lentils & Beans', now),
-      _starterFood('Black Chickpeas', 100, 'g', 160, 'Lentils & Beans', now),
-      _starterFood('Soybean', 100, 'g', 173, 'Lentils & Beans', now),
-
-      _starterFood('Potato', 100, 'g', 77, 'Vegetables', now),
-      _starterFood('Potato Bhorta', 100, 'g', 120, 'Vegetables', now),
-      _starterFood('Mixed Vegetables', 100, 'g', 65, 'Vegetables', now),
-      _starterFood('Spinach', 100, 'g', 23, 'Vegetables', now),
-      _starterFood('Cucumber', 100, 'g', 15, 'Vegetables', now),
-      _starterFood('Tomato', 100, 'g', 18, 'Vegetables', now),
-      _starterFood('Carrot', 100, 'g', 41, 'Vegetables', now),
-      _starterFood('Cauliflower', 100, 'g', 25, 'Vegetables', now),
-      _starterFood('Cabbage', 100, 'g', 25, 'Vegetables', now),
-
-      _starterFood('Milk', 100, 'ml', 42, 'Dairy', now),
-      _starterFood('Full Cream Milk', 100, 'ml', 61, 'Dairy', now),
-      _starterFood('Yogurt', 100, 'g', 61, 'Dairy', now),
-      _starterFood('Sweet Yogurt', 100, 'g', 120, 'Dairy', now),
-      _starterFood('Cheese', 100, 'g', 402, 'Dairy', now),
-      _starterFood('Butter', 10, 'g', 72, 'Dairy', now),
-
-      _starterFood('Banana', 1, 'piece', 105, 'Fruits', now),
-      _starterFood('Apple', 1, 'piece', 95, 'Fruits', now),
-      _starterFood('Orange', 1, 'piece', 62, 'Fruits', now),
-      _starterFood('Mango', 100, 'g', 60, 'Fruits', now),
-      _starterFood('Papaya', 100, 'g', 43, 'Fruits', now),
-      _starterFood('Watermelon', 100, 'g', 30, 'Fruits', now),
-      _starterFood('Guava', 100, 'g', 68, 'Fruits', now),
-      _starterFood('Grapes', 100, 'g', 69, 'Fruits', now),
-
-      _starterFood('Tea With Sugar', 1, 'cup', 70, 'Drinks', now),
-      _starterFood('Milk Tea', 1, 'cup', 100, 'Drinks', now),
-      _starterFood('Black Tea', 1, 'cup', 2, 'Drinks', now),
-      _starterFood('Coffee With Sugar', 1, 'cup', 80, 'Drinks', now),
-      _starterFood('Black Coffee', 1, 'cup', 2, 'Drinks', now),
-      _starterFood('Soft Drink', 100, 'ml', 42, 'Drinks', now),
-      _starterFood('Fruit Juice', 100, 'ml', 45, 'Drinks', now),
-
-      _starterFood('Singara', 1, 'piece', 150, 'Snacks', now),
-      _starterFood('Samosa', 1, 'piece', 130, 'Snacks', now),
-      _starterFood('Puri', 1, 'piece', 170, 'Snacks', now),
-      _starterFood('Piyaju', 1, 'piece', 80, 'Snacks', now),
-      _starterFood('Beguni', 1, 'piece', 90, 'Snacks', now),
-      _starterFood('French Fries', 100, 'g', 312, 'Snacks', now),
-      _starterFood('Chicken Nugget', 1, 'piece', 50, 'Snacks', now),
-      _starterFood('Burger', 1, 'piece', 350, 'Fast Food', now),
-      _starterFood('Pizza', 1, 'slice', 285, 'Fast Food', now),
-      _starterFood('Noodles', 100, 'g', 138, 'Fast Food', now),
-      _starterFood('Instant Noodles', 1, 'pack', 380, 'Fast Food', now),
-
-      _starterFood('Sugar', 1, 'tsp', 16, 'Misc', now),
-      _starterFood('Honey', 1, 'tsp', 21, 'Misc', now),
-      _starterFood('Cooking Oil', 1, 'tbsp', 120, 'Misc', now),
-      _starterFood('Mayonnaise', 1, 'tbsp', 94, 'Misc', now),
-      _starterFood('Ketchup', 1, 'tbsp', 20, 'Misc', now),
-    ];
-
-    for (final food in starterFoods) {
-      if (existingNormalizedNames.contains(food.normalizedName)) {
-        continue;
-      }
-
-      await HiveService.foodDictionaryBox.put(food.id, food.toMap());
+    for (final starterFood in starterFoods) {
+      await _upsertStarterFood(starterFood);
     }
+  }
+
+  Future<void> _upsertStarterFood(FoodItemModel starterFood) async {
+    final existingFood = findFoodByName(starterFood.name);
+
+    if (existingFood == null) {
+      await HiveService.foodDictionaryBox.put(
+        starterFood.id,
+        starterFood.toMap(),
+      );
+      return;
+    }
+
+    if (existingFood.isUserCreated) {
+      return;
+    }
+
+    final updatedFood = existingFood.copyWith(
+      name: starterFood.name,
+      normalizedName: starterFood.normalizedName,
+      baseQuantity: starterFood.baseQuantity,
+      unit: starterFood.unit,
+      calories: starterFood.calories,
+      category: starterFood.category,
+      isTreatFood: starterFood.isTreatFood,
+      updatedAt: DateTime.now(),
+    );
+
+    await HiveService.foodDictionaryBox.put(
+      updatedFood.id,
+      updatedFood.toMap(),
+    );
+  }
+
+  List<FoodItemModel> _starterFoods() {
+    return [
+      // Rice, staples, and common meals
+      _starterFood('Plain rice', 100, 'g', 130, 'Rice & Staples'),
+      _starterFood('Cooked rice 1 plate', 1, 'plate', 390, 'Rice & Staples'),
+      _starterFood('Khichuri', 1, 'plate', 420, 'Rice & Staples'),
+      _starterFood('Chicken biryani', 1, 'plate', 650, 'Rice & Staples'),
+      _starterFood('Beef biryani', 1, 'plate', 720, 'Rice & Staples'),
+      _starterFood('Polao', 1, 'plate', 480, 'Rice & Staples'),
+      _starterFood('Panta bhat', 1, 'plate', 300, 'Rice & Staples'),
+      _starterFood('Roti', 1, 'piece', 120, 'Rice & Staples'),
+      _starterFood('Paratha', 1, 'piece', 260, 'Rice & Staples', isTreatFood: true),
+      _starterFood('Luchi', 1, 'piece', 150, 'Rice & Staples', isTreatFood: true),
+      _starterFood('Puri', 1, 'piece', 180, 'Rice & Staples', isTreatFood: true),
+      _starterFood('Noodles', 1, 'plate', 420, 'Rice & Staples'),
+      _starterFood('Muri', 1, 'cup', 55, 'Rice & Staples'),
+      _starterFood('Flattened rice chira', 100, 'g', 350, 'Rice & Staples'),
+
+      // Dal, egg, fish, meat
+      _starterFood('Dal', 1, 'bowl', 180, 'Protein'),
+      _starterFood('Egg boiled', 1, 'piece', 78, 'Protein'),
+      _starterFood('Egg omelette', 1, 'piece', 140, 'Protein'),
+      _starterFood('Chicken curry', 1, 'serving', 320, 'Protein'),
+      _starterFood('Chicken roast', 1, 'piece', 420, 'Protein'),
+      _starterFood('Beef curry', 1, 'serving', 380, 'Protein'),
+      _starterFood('Mutton curry', 1, 'serving', 430, 'Protein'),
+      _starterFood('Rui fish curry', 1, 'piece', 220, 'Protein'),
+      _starterFood('Hilsa fish curry', 1, 'piece', 300, 'Protein'),
+      _starterFood('Pangas fish curry', 1, 'piece', 240, 'Protein'),
+      _starterFood('Tilapia fish curry', 1, 'piece', 210, 'Protein'),
+      _starterFood('Small fish curry', 1, 'serving', 190, 'Protein'),
+      _starterFood('Dried fish bhorta', 1, 'serving', 180, 'Protein'),
+
+      // Vegetables and bhaji
+      _starterFood('Mixed vegetable', 1, 'serving', 160, 'Vegetables'),
+      _starterFood('Potato bhaji', 1, 'serving', 180, 'Vegetables'),
+      _starterFood('Eggplant bhaji', 1, 'serving', 170, 'Vegetables'),
+      _starterFood('Spinach shak', 1, 'serving', 90, 'Vegetables'),
+      _starterFood('Bottle gourd lau', 1, 'serving', 80, 'Vegetables'),
+      _starterFood('Pumpkin', 1, 'serving', 95, 'Vegetables'),
+      _starterFood('Okra bhindi', 1, 'serving', 110, 'Vegetables'),
+      _starterFood('Cabbage', 1, 'serving', 80, 'Vegetables'),
+      _starterFood('Cauliflower', 1, 'serving', 90, 'Vegetables'),
+      _starterFood('Carrot', 100, 'g', 41, 'Vegetables'),
+      _starterFood('Cucumber', 100, 'g', 16, 'Vegetables'),
+      _starterFood('Tomato', 100, 'g', 18, 'Vegetables'),
+      _starterFood('Green salad', 1, 'serving', 60, 'Vegetables'),
+
+      // Fruits common in Bangladesh
+      _starterFood('Banana', 1, 'piece', 105, 'Fruits'),
+      _starterFood('Mango', 1, 'piece', 200, 'Fruits'),
+      _starterFood('Jackfruit', 100, 'g', 95, 'Fruits'),
+      _starterFood('Papaya', 100, 'g', 43, 'Fruits'),
+      _starterFood('Guava', 1, 'piece', 68, 'Fruits'),
+      _starterFood('Apple', 1, 'piece', 95, 'Fruits'),
+      _starterFood('Orange', 1, 'piece', 62, 'Fruits'),
+      _starterFood('Watermelon', 100, 'g', 30, 'Fruits'),
+      _starterFood('Pineapple', 100, 'g', 50, 'Fruits'),
+      _starterFood('Litchi', 10, 'piece', 66, 'Fruits'),
+      _starterFood('Coconut water', 1, 'glass', 45, 'Drinks'),
+      _starterFood('Coconut flesh', 100, 'g', 354, 'Fruits'),
+
+      // Breakfast and dairy
+      _starterFood('Bread slice', 1, 'piece', 75, 'Breakfast'),
+      _starterFood('Butter', 1, 'tsp', 34, 'Breakfast'),
+      _starterFood('Jam', 1, 'tsp', 28, 'Breakfast', isTreatFood: true),
+      _starterFood('Milk', 1, 'glass', 150, 'Drinks'),
+      _starterFood('Curd yogurt', 1, 'cup', 150, 'Breakfast'),
+      _starterFood('Oats', 1, 'bowl', 250, 'Breakfast'),
+      _starterFood('Cornflakes with milk', 1, 'bowl', 260, 'Breakfast'),
+
+      // Drinks
+      _starterFood('Water', 1, 'glass', 0, 'Drinks'),
+      _starterFood('Tea without sugar', 1, 'cup', 5, 'Drinks'),
+      _starterFood('Tea with sugar', 1, 'cup', 70, 'Drinks', isTreatFood: true),
+      _starterFood('Milk tea', 1, 'cup', 120, 'Drinks', isTreatFood: true),
+      _starterFood('Black coffee', 1, 'cup', 5, 'Drinks'),
+      _starterFood('Coffee with milk and sugar', 1, 'cup', 120, 'Drinks', isTreatFood: true),
+      _starterFood('Soft drink', 1, 'glass', 110, 'Drinks', isTreatFood: true),
+      _starterFood('Fruit juice', 1, 'glass', 130, 'Drinks', isTreatFood: true),
+      _starterFood('Lassi', 1, 'glass', 220, 'Drinks', isTreatFood: true),
+
+      // Snacks, street food, and treats
+      _starterFood('Singara', 1, 'piece', 180, 'Snacks', isTreatFood: true),
+      _starterFood('Samosa', 1, 'piece', 190, 'Snacks', isTreatFood: true),
+      _starterFood('Piyaju', 1, 'piece', 90, 'Snacks', isTreatFood: true),
+      _starterFood('Beguni', 1, 'piece', 120, 'Snacks', isTreatFood: true),
+      _starterFood('Fuchka', 1, 'plate', 350, 'Snacks', isTreatFood: true),
+      _starterFood('Chotpoti', 1, 'plate', 420, 'Snacks', isTreatFood: true),
+      _starterFood('Jhalmuri', 1, 'serving', 250, 'Snacks', isTreatFood: true),
+      _starterFood('Chanachur', 50, 'g', 280, 'Snacks', isTreatFood: true),
+      _starterFood('Chips', 1, 'packet', 250, 'Snacks', isTreatFood: true),
+      _starterFood('Biscuit', 2, 'piece', 110, 'Snacks', isTreatFood: true),
+      _starterFood('Cake slice', 1, 'piece', 280, 'Snacks', isTreatFood: true),
+      _starterFood('Chocolate', 1, 'piece', 220, 'Snacks', isTreatFood: true),
+      _starterFood('Ice cream', 1, 'cup', 210, 'Snacks', isTreatFood: true),
+      _starterFood('Sweet doi', 1, 'cup', 220, 'Sweets', isTreatFood: true),
+      _starterFood('Rasgulla', 1, 'piece', 150, 'Sweets', isTreatFood: true),
+      _starterFood('Gulab jamun', 1, 'piece', 180, 'Sweets', isTreatFood: true),
+      _starterFood('Jilapi', 1, 'piece', 170, 'Sweets', isTreatFood: true),
+      _starterFood('Mishti', 1, 'piece', 160, 'Sweets', isTreatFood: true),
+
+      // Common fast food
+      _starterFood('Burger', 1, 'piece', 450, 'Fast Food', isTreatFood: true),
+      _starterFood('Pizza slice', 1, 'piece', 285, 'Fast Food', isTreatFood: true),
+      _starterFood('Fried chicken', 1, 'piece', 320, 'Fast Food', isTreatFood: true),
+      _starterFood('French fries', 1, 'serving', 365, 'Fast Food', isTreatFood: true),
+      _starterFood('Shawarma', 1, 'piece', 420, 'Fast Food', isTreatFood: true),
+    ];
   }
 
   FoodItemModel _starterFood(
@@ -127,9 +170,11 @@ class FoodRepository {
     double baseQuantity,
     String unit,
     double calories,
-    String category,
-    DateTime now,
-  ) {
+    String category, {
+    bool isTreatFood = false,
+  }) {
+    final now = DateTime.now();
+
     return FoodItemModel(
       id: _uuid.v4(),
       name: name,
@@ -138,6 +183,7 @@ class FoodRepository {
       unit: unit,
       calories: calories,
       category: category,
+      isTreatFood: isTreatFood,
       isUserCreated: false,
       createdAt: now,
       updatedAt: now,
@@ -150,7 +196,15 @@ class FoodRepository {
         .where((food) => !food.isDeleted)
         .toList();
 
-    foods.sort((a, b) => a.name.compareTo(b.name));
+    foods.sort((a, b) {
+      final categoryCompare = a.category.compareTo(b.category);
+
+      if (categoryCompare != 0) {
+        return categoryCompare;
+      }
+
+      return a.name.compareTo(b.name);
+    });
 
     return foods;
   }
@@ -174,14 +228,22 @@ class FoodRepository {
       return null;
     }
 
-    return FoodItemModel.fromMap(rawFood);
+    final food = FoodItemModel.fromMap(rawFood);
+
+    if (food.isDeleted) {
+      return null;
+    }
+
+    return food;
   }
 
   FoodItemModel? findFoodByName(String name) {
     final normalizedName = normalize(name);
 
-    for (final food in getFoodItems()) {
-      if (food.normalizedName == normalizedName) {
+    for (final rawFood in HiveService.foodDictionaryBox.values) {
+      final food = FoodItemModel.fromMap(rawFood);
+
+      if (food.normalizedName == normalizedName && !food.isDeleted) {
         return food;
       }
     }
@@ -194,13 +256,9 @@ class FoodRepository {
     required double baseQuantity,
     required String unit,
     required double calories,
+    String category = 'User Added',
+    bool isTreatFood = false,
   }) async {
-    final existingFood = findFoodByName(name);
-
-    if (existingFood != null) {
-      return existingFood;
-    }
-
     final now = DateTime.now();
 
     final food = FoodItemModel(
@@ -208,9 +266,10 @@ class FoodRepository {
       name: name.trim(),
       normalizedName: normalize(name),
       baseQuantity: baseQuantity,
-      unit: unit.trim().toLowerCase(),
+      unit: unit,
       calories: calories,
-      category: 'Custom',
+      category: category,
+      isTreatFood: isTreatFood,
       isUserCreated: true,
       createdAt: now,
       updatedAt: now,
@@ -229,8 +288,6 @@ class FoodRepository {
   }) async {
     final now = DateTime.now();
 
-    final calculatedCalories = foodItem.caloriesForQuantity(quantity);
-
     final log = FoodLogModel(
       id: _uuid.v4(),
       logDate: AppDateUtils.dateKey(date),
@@ -238,7 +295,8 @@ class FoodRepository {
       foodName: foodItem.name,
       quantity: quantity,
       unit: foodItem.unit,
-      calculatedCalories: calculatedCalories,
+      calculatedCalories: foodItem.caloriesForQuantity(quantity),
+      isTreatFood: foodItem.isTreatFood,
       consumedAt: now,
       createdAt: now,
       updatedAt: now,
@@ -250,7 +308,7 @@ class FoodRepository {
     return log;
   }
 
-  Future<FoodLogModel> addCustomFoodAndLog({
+  Future<void> addCustomFoodAndLog({
     required DateTime date,
     required String name,
     required double baseQuantity,
@@ -259,16 +317,16 @@ class FoodRepository {
     required double logQuantity,
     String note = '',
   }) async {
-    final foodItem = await addFoodItem(
+    final food = await addFoodItem(
       name: name,
       baseQuantity: baseQuantity,
       unit: unit,
       calories: calories,
     );
 
-    return addFoodLog(
+    await addFoodLog(
       date: date,
-      foodItem: foodItem,
+      foodItem: food,
       quantity: logQuantity,
       note: note,
     );
@@ -286,7 +344,8 @@ class FoodRepository {
 
     return logs;
   }
-    Future<void> updateFoodLog({
+
+  Future<void> updateFoodLog({
     required String id,
     required double quantity,
     required String note,
@@ -309,6 +368,7 @@ class FoodRepository {
       quantity: quantity,
       unit: foodItem?.unit ?? log.unit,
       calculatedCalories: calculatedCalories,
+      isTreatFood: foodItem?.isTreatFood ?? log.isTreatFood,
       note: note.trim(),
       updatedAt: DateTime.now(),
     );
@@ -354,6 +414,34 @@ class FoodRepository {
     );
   }
 
+  double getDailyRegularCalories(DateTime date) {
+    final logs = getFoodLogsByDate(date);
+
+    return logs
+        .where((log) => !log.isTreatFood)
+        .fold<double>(0, (total, log) => total + log.calculatedCalories);
+  }
+
+  double getDailyTreatCalories(DateTime date) {
+    final logs = getFoodLogsByDate(date);
+
+    return logs
+        .where((log) => log.isTreatFood)
+        .fold<double>(0, (total, log) => total + log.calculatedCalories);
+  }
+
+  DailyFoodBreakdown getDailyFoodBreakdown(DateTime date) {
+    final regularCalories = getDailyRegularCalories(date);
+    final treatCalories = getDailyTreatCalories(date);
+
+    return DailyFoodBreakdown(
+      date: date,
+      regularCalories: regularCalories,
+      treatCalories: treatCalories,
+      totalCalories: regularCalories + treatCalories,
+    );
+  }
+
   List<DailyCalorieTotal> getDailyCalorieTotalsForLastDays({
     required DateTime endDate,
     int days = 30,
@@ -388,4 +476,18 @@ class DailyCalorieTotal {
   final DateTime date;
   final String dateKey;
   final double calories;
+}
+
+class DailyFoodBreakdown {
+  const DailyFoodBreakdown({
+    required this.date,
+    required this.regularCalories,
+    required this.treatCalories,
+    required this.totalCalories,
+  });
+
+  final DateTime date;
+  final double regularCalories;
+  final double treatCalories;
+  final double totalCalories;
 }

@@ -7,6 +7,7 @@ class FoodLogModel {
     required this.quantity,
     required this.unit,
     required this.calculatedCalories,
+    required this.isTreatFood,
     required this.consumedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -15,12 +16,13 @@ class FoodLogModel {
   });
 
   final String id;
-  final String logDate; // yyyy-MM-dd
+  final String logDate;
   final String foodItemId;
   final String foodName;
   final double quantity;
   final String unit;
   final double calculatedCalories;
+  final bool isTreatFood;
   final DateTime consumedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -35,6 +37,7 @@ class FoodLogModel {
     double? quantity,
     String? unit,
     double? calculatedCalories,
+    bool? isTreatFood,
     DateTime? consumedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -49,6 +52,7 @@ class FoodLogModel {
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
       calculatedCalories: calculatedCalories ?? this.calculatedCalories,
+      isTreatFood: isTreatFood ?? this.isTreatFood,
       consumedAt: consumedAt ?? this.consumedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -66,6 +70,7 @@ class FoodLogModel {
       'quantity': quantity,
       'unit': unit,
       'calculatedCalories': calculatedCalories,
+      'isTreatFood': isTreatFood,
       'consumedAt': consumedAt.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -80,10 +85,11 @@ class FoodLogModel {
       logDate: map['logDate'] as String,
       foodItemId: map['foodItemId'] as String,
       foodName: map['foodName'] as String,
-      quantity: (map['quantity'] as num?)?.toDouble() ?? 1,
+      quantity: (map['quantity'] as num?)?.toDouble() ?? 0,
       unit: map['unit'] as String? ?? 'g',
       calculatedCalories:
           (map['calculatedCalories'] as num?)?.toDouble() ?? 0,
+      isTreatFood: map['isTreatFood'] as bool? ?? false,
       consumedAt: DateTime.tryParse(map['consumedAt']?.toString() ?? '') ??
           DateTime.now(),
       createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
